@@ -1,14 +1,19 @@
-"""Reporter port: renders a finished campaign Report somewhere."""
+"""Reporter interface: renders a finished campaign Report somewhere.
+
+Single responsibility: take a completed, immutable ``Report`` and
+render it to some output surface (stdout, a file, a webhook, ...). It
+knows nothing about how the campaign was run or how findings were
+graded.
+"""
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from abc import ABC, abstractmethod
 
 from llm_redteam_firewall.domain.models import Report
 
 
-@runtime_checkable
-class Reporter(Protocol):
+class Reporter(ABC):
     """Renders a :class:`Report` to some output surface.
 
     Multiple reporters can be attached to a single campaign (e.g.
@@ -16,8 +21,13 @@ class Reporter(Protocol):
     calls ``report`` on each one it was configured with.
     """
 
-    name: str
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Unique plugin name this reporter registers under."""
+        raise NotImplementedError
 
+    @abstractmethod
     def report(self, report: Report) -> None:
         """Render ``report``. Must not mutate it (it is immutable anyway)."""
-        ...
+        raise NotImplementedError

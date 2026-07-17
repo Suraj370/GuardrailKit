@@ -14,6 +14,7 @@ end without any external dependency, mirroring
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Attack, AttackResult, EvaluationResult, Vulnerability
+from llm_redteam_firewall.domain.ports import Evaluator
 from llm_redteam_firewall.plugins import EVALUATORS
 
 _REFUSAL_MARKERS = (
@@ -27,7 +28,7 @@ _REFUSAL_MARKERS = (
 
 
 @EVALUATORS.register("dummy")
-class DummyEvaluator:
+class DummyEvaluator(Evaluator):
     """Naive refusal-keyword-match Evaluator with no external dependencies."""
 
     name = "dummy"

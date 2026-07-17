@@ -1,12 +1,21 @@
 """Ports: the interfaces the application layer depends on.
 
-Every port here is a ``typing.Protocol`` — structural typing, not
-inheritance. Adapters satisfy a port by shape, not by subclassing,
-which keeps ``adapters/`` free to depend on third-party SDKs without
-those dependencies leaking into ``domain`` or ``application``.
+The four core campaign-flow interfaces — ``AttackGenerator``,
+``Target``, ``Evaluator``, ``Reporter`` — are ``abc.ABC`` subclasses:
+each declares exactly one abstract responsibility (generate attacks,
+execute one attack, grade one result, render a report) and adapters
+implement a port by explicit subclassing, not by structural shape.
+This makes "does this class satisfy the interface" checkable both at
+class-definition time (missing an ``@abstractmethod`` override raises
+``TypeError`` on instantiation) and via ``isinstance``.
+
+``FindingsStorage`` remains a ``typing.Protocol`` — it is a supporting
+persistence concern rather than a step in the Campaign -> Vulnerability
+-> AttackGenerator -> Target -> Evaluator -> Reporter flow, and structural
+typing is a reasonable fit for a two-method storage-backend contract.
 
 This package is the hexagon's boundary: ``application`` imports these
-protocols and nothing else; ``adapters`` implement them and depend
+interfaces and nothing else; ``adapters`` implement them and depend
 inward on ``domain``, never on ``application``.
 """
 

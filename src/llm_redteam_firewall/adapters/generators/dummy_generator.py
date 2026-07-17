@@ -13,6 +13,7 @@ implementations, not here.
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Attack, Vulnerability
+from llm_redteam_firewall.domain.ports import AttackGenerator
 from llm_redteam_firewall.plugins import GENERATORS
 
 _STATIC_PROMPTS = (
@@ -23,7 +24,7 @@ _STATIC_PROMPTS = (
 
 
 @GENERATORS.register("dummy")
-class DummyAttackGenerator:
+class DummyAttackGenerator(AttackGenerator):
     """Static, deterministic AttackGenerator with no external dependencies."""
 
     name = "dummy"

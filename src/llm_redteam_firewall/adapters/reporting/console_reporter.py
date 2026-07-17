@@ -7,11 +7,12 @@ Formatting only — no grading or business logic lives here.
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Report
+from llm_redteam_firewall.domain.ports import Reporter
 from llm_redteam_firewall.plugins import REPORTERS
 
 
 @REPORTERS.register("console")
-class ConsoleReporter:
+class ConsoleReporter(Reporter):
     """Prints a plain-text campaign summary to stdout."""
 
     name = "console"

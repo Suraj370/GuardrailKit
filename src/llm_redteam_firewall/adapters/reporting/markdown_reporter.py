@@ -8,11 +8,12 @@ suitable for attaching to a pull request or wiki page.
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Report
+from llm_redteam_firewall.domain.ports import Reporter
 from llm_redteam_firewall.plugins import REPORTERS
 
 
 @REPORTERS.register("markdown")
-class MarkdownReporter:
+class MarkdownReporter(Reporter):
     """Placeholder for a future Markdown-file Reporter."""
 
     name = "markdown"

@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from llm_redteam_firewall.domain.models import Report
+from llm_redteam_firewall.domain.ports import Reporter
 from llm_redteam_firewall.plugins import REPORTERS
 
 
@@ -29,7 +30,7 @@ def _json_default(value: Any) -> Any:
 
 
 @REPORTERS.register("json")
-class JSONReporter:
+class JSONReporter(Reporter):
     """Writes the campaign report to ``output_path`` as JSON."""
 
     name = "json"

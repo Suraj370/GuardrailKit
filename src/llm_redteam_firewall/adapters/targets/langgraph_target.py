@@ -12,11 +12,12 @@ from __future__ import annotations
 from typing import Any
 
 from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam_firewall.domain.ports import Target
 from llm_redteam_firewall.plugins import TARGETS
 
 
 @TARGETS.register("langgraph")
-class LangGraphTarget:
+class LangGraphTarget(Target):
     """Invokes a compiled LangGraph graph with an attack prompt as input."""
 
     name = "langgraph"

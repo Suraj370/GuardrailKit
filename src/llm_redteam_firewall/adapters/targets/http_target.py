@@ -10,11 +10,12 @@ HTTP client dependency (e.g. ``httpx``) when implementing.
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam_firewall.domain.ports import Target
 from llm_redteam_firewall.plugins import TARGETS
 
 
 @TARGETS.register("http")
-class HTTPTarget:
+class HTTPTarget(Target):
     """Posts attack prompts to an HTTP endpoint (e.g. a FastAPI service)."""
 
     name = "http"

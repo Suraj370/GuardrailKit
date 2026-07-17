@@ -10,11 +10,12 @@ under the ``openai`` extra in ``pyproject.toml`` when implementing.
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam_firewall.domain.ports import Target
 from llm_redteam_firewall.plugins import TARGETS
 
 
 @TARGETS.register("openai")
-class OpenAITarget:
+class OpenAITarget(Target):
     """Sends attack prompts to an OpenAI-compatible chat completions endpoint."""
 
     name = "openai"

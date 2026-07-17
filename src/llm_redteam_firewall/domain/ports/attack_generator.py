@@ -1,27 +1,25 @@
-"""AttackGenerator port: the attack-generation interface.
+"""AttackGenerator interface: the attack-generation abstraction.
 
 This is the seam the whole framework is built around. The
-orchestrator only ever depends on this ``Protocol`` — never on a
-concrete generator — so that swapping ``DummyAttackGenerator`` for a
+orchestrator only ever depends on this abstract base class — never on
+a concrete generator — so that swapping ``DummyAttackGenerator`` for a
 ``GarakAttackGenerator`` (or a fuzzing generator, an LLM-driven
 generator, a dataset-replay generator, ...) is purely a config change.
 
-Design note: ``generate`` is synchronous and takes no ``ExecutionContext``.
-Generators that need I/O (e.g. calling a model to mutate seed prompts,
-or shelling out to an external tool like Garak) are expected to manage
-that internally rather than push async concerns onto every trivial
-generator like :class:`DummyAttackGenerator`.
+Single responsibility: turn a ``Vulnerability`` into a bounded list of
+``Attack``s. It knows nothing about how those attacks get executed
+against a target or how the results get graded — that is the
+``Target`` and ``Evaluator`` interfaces' job, respectively.
 """
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from abc import ABC, abstractmethod
 
 from llm_redteam_firewall.domain.models import Attack, Vulnerability
 
 
-@runtime_checkable
-class AttackGenerator(Protocol):
+class AttackGenerator(ABC):
     """Produces candidate attacks for a given vulnerability.
 
     Implementations MUST be side-effect free with respect to the
@@ -29,8 +27,13 @@ class AttackGenerator(Protocol):
     pipeline stages (see ``ARCHITECTURE.md``).
     """
 
-    name: str
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Unique plugin name this generator registers under."""
+        raise NotImplementedError
 
+    @abstractmethod
     def generate(self, vulnerability: Vulnerability, max_attacks: int) -> list[Attack]:
         """Return up to ``max_attacks`` attacks for ``vulnerability``.
 
@@ -38,4 +41,4 @@ class AttackGenerator(Protocol):
         static/dataset-backed generator that has exhausted its
         templates) but must never return more.
         """
-        ...
+        raise NotImplementedError

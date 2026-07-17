@@ -10,11 +10,12 @@ here; add one under an appropriate extra in ``pyproject.toml``.
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Attack, AttackResult, EvaluationResult, Vulnerability
+from llm_redteam_firewall.domain.ports import Evaluator
 from llm_redteam_firewall.plugins import EVALUATORS
 
 
 @EVALUATORS.register("llm_judge")
-class LLMJudgeEvaluator:
+class LLMJudgeEvaluator(Evaluator):
     """Placeholder for a future LLM-as-judge Evaluator."""
 
     name = "llm_judge"

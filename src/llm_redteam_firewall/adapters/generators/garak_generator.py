@@ -1,9 +1,9 @@
 """GarakAttackGenerator: extension-point stub, not implemented yet.
 
 This file exists to prove out the plugin seam described in
-``ARCHITECTURE.md``: it satisfies the
+``ARCHITECTURE.md``: it subclasses
 :class:`~llm_redteam_firewall.domain.ports.attack_generator.AttackGenerator`
-protocol and registers itself under the name ``"garak"``, but raises
+and registers itself under the name ``"garak"``, but raises
 ``NotImplementedError`` until real Garak integration is written.
 
 When implemented, this adapter (or an equivalent shipped as a
@@ -23,11 +23,12 @@ change to support this — only this file (or an out-of-tree package).
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Attack, Vulnerability
+from llm_redteam_firewall.domain.ports import AttackGenerator
 from llm_redteam_firewall.plugins import GENERATORS
 
 
 @GENERATORS.register("garak")
-class GarakAttackGenerator:
+class GarakAttackGenerator(AttackGenerator):
     """Placeholder for a future Garak-probe-backed AttackGenerator."""
 
     name = "garak"

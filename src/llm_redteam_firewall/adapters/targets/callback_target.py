@@ -15,18 +15,23 @@ from collections.abc import Awaitable, Callable
 
 from llm_redteam_firewall.domain.errors import TargetExecutionError
 from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam_firewall.domain.ports import Target
 from llm_redteam_firewall.plugins import TARGETS
 
 PromptCallback = Callable[[str], "str | Awaitable[str]"]
 
 
 @TARGETS.register("callback")
-class CallbackTarget:
+class CallbackTarget(Target):
     """Adapts a plain ``str -> str`` (or ``str -> Awaitable[str]``) callable."""
 
     def __init__(self, callback: PromptCallback, name: str = "callback") -> None:
         self._callback = callback
-        self.name = name
+        self._name = name
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
         started = time.perf_counter()

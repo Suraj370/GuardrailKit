@@ -11,11 +11,12 @@ from __future__ import annotations
 from typing import Any
 
 from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam_firewall.domain.ports import Target
 from llm_redteam_firewall.plugins import TARGETS
 
 
 @TARGETS.register("local_model")
-class LocalModelTarget:
+class LocalModelTarget(Target):
     """Runs attack prompts against a locally-loaded model."""
 
     name = "local_model"

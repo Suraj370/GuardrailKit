@@ -1,14 +1,19 @@
-"""Evaluator port: grades whether an attack defeated the target."""
+"""Evaluator interface: grades whether an attack defeated the target.
+
+Single responsibility: look at one attack/result pair and decide
+whether the target's response exhibits the vulnerability being probed
+for. It knows nothing about how the attack was generated or how the
+target was invoked.
+"""
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from abc import ABC, abstractmethod
 
 from llm_redteam_firewall.domain.models import Attack, AttackResult, EvaluationResult, Vulnerability
 
 
-@runtime_checkable
-class Evaluator(Protocol):
+class Evaluator(ABC):
     """Scores a single attack/result pair against a vulnerability.
 
     Async because realistic evaluators (LLM-as-judge, moderation APIs)
@@ -16,8 +21,13 @@ class Evaluator(Protocol):
     a trivial coroutine body.
     """
 
-    name: str
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        """Unique plugin name this evaluator registers under."""
+        raise NotImplementedError
 
+    @abstractmethod
     async def evaluate(
         self,
         vulnerability: Vulnerability,
@@ -32,4 +42,4 @@ class Evaluator(Protocol):
         :class:`~llm_redteam_firewall.domain.models.finding.Finding`
         should be recorded.
         """
-        ...
+        raise NotImplementedError

@@ -10,16 +10,21 @@ functional but requires the caller to supply behavior.
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam_firewall.domain.ports import Target
 from llm_redteam_firewall.plugins import TARGETS
 
 
 @TARGETS.register("mock")
-class MockTarget:
+class MockTarget(Target):
     """Always returns the same canned response, regardless of input."""
 
     def __init__(self, canned_response: str = "I cannot help with that request.", name: str = "mock") -> None:
         self._canned_response = canned_response
-        self.name = name
+        self._name = name
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
         return AttackResult(

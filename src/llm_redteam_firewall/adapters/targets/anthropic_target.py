@@ -8,11 +8,12 @@ Same status as :mod:`.openai_target` — not implemented. The
 from __future__ import annotations
 
 from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam_firewall.domain.ports import Target
 from llm_redteam_firewall.plugins import TARGETS
 
 
 @TARGETS.register("anthropic")
-class AnthropicTarget:
+class AnthropicTarget(Target):
     """Sends attack prompts to the Anthropic Messages API."""
 
     name = "anthropic"

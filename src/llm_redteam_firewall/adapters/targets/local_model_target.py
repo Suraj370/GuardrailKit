@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from llm_redteam_firewall.domain.models import Attack, ExecutionContext, Response
+from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
 from llm_redteam_firewall.plugins import TARGETS
 
 
@@ -24,7 +24,7 @@ class LocalModelTarget:
         self._model_path = model_path
         self._generation_kwargs = generation_kwargs or {}
 
-    async def execute(self, ctx: ExecutionContext, attack: Attack) -> Response:
+    async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
         raise NotImplementedError(
             "LocalModelTarget is a scaffold placeholder. Implement by loading "
             "the model from self._model_path (likely once, lazily, not per "

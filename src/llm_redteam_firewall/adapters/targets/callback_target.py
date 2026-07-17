@@ -14,7 +14,7 @@ import time
 from collections.abc import Awaitable, Callable
 
 from llm_redteam_firewall.domain.errors import TargetExecutionError
-from llm_redteam_firewall.domain.models import Attack, ExecutionContext, Response
+from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
 from llm_redteam_firewall.plugins import TARGETS
 
 PromptCallback = Callable[[str], "str | Awaitable[str]"]
@@ -28,7 +28,7 @@ class CallbackTarget:
         self._callback = callback
         self.name = name
 
-    async def execute(self, ctx: ExecutionContext, attack: Attack) -> Response:
+    async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
         started = time.perf_counter()
         try:
             result = self._callback(attack.prompt)
@@ -36,7 +36,7 @@ class CallbackTarget:
         except Exception as exc:  # noqa: BLE001 - deliberately broad: any user callback error becomes a TargetExecutionError
             raise TargetExecutionError(f"callback target {self.name!r} raised: {exc}") from exc
 
-        return Response(
+        return AttackResult(
             attack_id=attack.id,
             target_name=self.name,
             output=str(output),

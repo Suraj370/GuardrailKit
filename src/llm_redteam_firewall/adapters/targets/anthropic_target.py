@@ -7,7 +7,7 @@ Same status as :mod:`.openai_target` — not implemented. The
 
 from __future__ import annotations
 
-from llm_redteam_firewall.domain.models import Attack, ExecutionContext, Response
+from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
 from llm_redteam_firewall.plugins import TARGETS
 
 
@@ -21,9 +21,9 @@ class AnthropicTarget:
         self._model = model
         self._api_key = api_key
 
-    async def execute(self, ctx: ExecutionContext, attack: Attack) -> Response:
+    async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
         raise NotImplementedError(
             "AnthropicTarget is a scaffold placeholder. Implement by calling "
             "the Anthropic Messages API with attack.prompt and mapping the "
-            "result onto a Response."
+            "result onto an AttackResult."
         )

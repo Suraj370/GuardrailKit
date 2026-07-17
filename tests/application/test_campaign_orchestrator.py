@@ -12,12 +12,12 @@ import pytest
 from llm_redteam_firewall.application import CampaignOrchestrator, EvaluationEngine, ExecutionEngine
 from llm_redteam_firewall.domain.models import (
     Attack,
+    AttackResult,
     Campaign,
-    CampaignResult,
-    Evaluation,
+    EvaluationResult,
     ExecutionContext,
     Finding,
-    Response,
+    Report,
     Vulnerability,
 )
 
@@ -35,15 +35,15 @@ class _FakeGenerator:
 class _FakeTarget:
     name = "fake"
 
-    async def execute(self, ctx: ExecutionContext, attack: Attack) -> Response:
-        return Response(attack_id=attack.id, target_name=self.name, output="response")
+    async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
+        return AttackResult(attack_id=attack.id, target_name=self.name, output="response")
 
 
 class _FakeEvaluator:
     name = "fake"
 
-    async def evaluate(self, vulnerability, attack: Attack, response: Response) -> Evaluation:
-        return Evaluation(attack_id=attack.id, passed=False, evaluator_name=self.name)
+    async def evaluate(self, vulnerability, attack: Attack, attack_result: AttackResult) -> EvaluationResult:
+        return EvaluationResult(attack_id=attack.id, passed=False, evaluator_name=self.name)
 
 
 class _FakeStorage:
@@ -63,10 +63,10 @@ class _FakeReporter:
     name = "fake"
 
     def __init__(self) -> None:
-        self.reported: CampaignResult | None = None
+        self.reported: Report | None = None
 
-    def report(self, result: CampaignResult) -> None:
-        self.reported = result
+    def report(self, report: Report) -> None:
+        self.reported = report
 
 
 @pytest.mark.asyncio
@@ -82,11 +82,11 @@ async def test_orchestrator_runs_full_pipeline_and_reports(vulnerability: Vulner
     )
     campaign = Campaign(name="c1", vulnerabilities=(vulnerability,), max_attacks_per_vulnerability=2)
 
-    result = await orchestrator.run(campaign)
+    report = await orchestrator.run(campaign)
 
-    assert result.campaign_name == "c1"
-    assert result.total_attacks == 2
-    assert len(result.vulnerable_findings) == 2  # _FakeEvaluator always fails the target
+    assert report.campaign_name == "c1"
+    assert report.total_attacks == 2
+    assert len(report.vulnerable_findings) == 2  # _FakeEvaluator always fails the target
     assert len(storage.saved) == 2
-    assert reporter.reported is result
-    assert result.finished_at is not None
+    assert reporter.reported is report
+    assert report.finished_at >= report.started_at

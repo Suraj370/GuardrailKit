@@ -20,8 +20,8 @@ class AttackGenerationError(RedTeamError):
 class TargetExecutionError(RedTeamError):
     """Raised when a Target fails to execute an attack.
 
-    Adapters may choose to raise this *or* return a
-    :class:`~llm_redteam_firewall.domain.models.response.Response`
+    Adapters may choose to raise this *or* return an
+    :class:`~llm_redteam_firewall.domain.models.attack_result.AttackResult`
     with ``error`` set. Raising should be reserved for failures the
     execution engine should treat as retryable/fatal rather than a
     graded outcome.

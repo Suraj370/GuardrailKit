@@ -27,11 +27,12 @@ llm-redteam-firewall/
 │       │   │   ├── severity.py
 │       │   │   ├── vulnerability.py
 │       │   │   ├── attack.py
-│       │   │   ├── response.py
-│       │   │   ├── evaluation.py
+│       │   │   ├── attack_result.py
+│       │   │   ├── evaluation_result.py
 │       │   │   ├── finding.py
 │       │   │   ├── execution_context.py
-│       │   │   └── campaign.py
+│       │   │   ├── campaign.py
+│       │   │   └── report.py
 │       │   └── ports/                 # interfaces (typing.Protocol)
 │       │       ├── attack_generator.py
 │       │       ├── target.py
@@ -190,22 +191,24 @@ sequenceDiagram
         Orch->>Exec: run(campaign.name, attacks)
         loop for each Attack (bounded concurrency)
             Exec->>Tgt: execute(ctx, attack)
-            Tgt-->>Exec: Response
+            Tgt-->>Exec: AttackResult
         end
-        Exec-->>Orch: list[Response]
-        Orch->>Eval: run(vulnerability, attacks, responses)
-        loop for each (Attack, Response) pair
-            Eval->>Grader: evaluate(vulnerability, attack, response)
-            Grader-->>Eval: Evaluation
+        Exec-->>Orch: list[AttackResult]
+        Orch->>Eval: run(vulnerability, attacks, attack_results)
+        loop for each (Attack, AttackResult) pair
+            Eval->>Grader: evaluate(vulnerability, attack, attack_result)
+            Grader-->>Eval: EvaluationResult
         end
-        Eval-->>Orch: list[Evaluation]
-        loop for each (Attack, Response, Evaluation)
+        Eval-->>Orch: list[EvaluationResult]
+        loop for each (Attack, AttackResult, EvaluationResult)
             Orch->>Store: save(Finding)
         end
     end
 
-    Orch->>Rep: report(CampaignResult)
-    Orch-->>CLI: CampaignResult
+    Note over Orch: construct one immutable Report from<br/>the accumulated findings
+
+    Orch->>Rep: report(Report)
+    Orch-->>CLI: Report
 ```
 
 ## 6. Future extension points
@@ -220,10 +223,10 @@ touching `domain`, `application`, `plugins`, or `cli`:
 | Real `OpenAITarget` / `AnthropicTarget` | `adapters/targets/` | Wire in the respective SDK behind the existing constructor signatures. |
 | `HTTPTarget` | `adapters/targets/http_target.py` | Add `httpx`, POST `attack.prompt`, parse the configured response field — works against a FastAPI service or any other HTTP backend. |
 | `LocalModelTarget` | `adapters/targets/local_model_target.py` | Lazy-load a `transformers`/`vllm`/`llama.cpp` model once, not per call. |
-| `LangGraphTarget` | `adapters/targets/langgraph_target.py` | Invoke a compiled graph; record intermediate steps in `Response.raw`. |
+| `LangGraphTarget` | `adapters/targets/langgraph_target.py` | Invoke a compiled graph; record intermediate steps in `AttackResult.raw`. |
 | `LLMJudgeEvaluator` | `adapters/evaluators/llm_judge_evaluator.py` | Prompt a judge model with a grading rubric; parse a structured verdict. |
 | `SQLiteStorage` | `adapters/storage/sqlite_storage.py` | Durable local persistence with only the stdlib `sqlite3` module. |
-| `MarkdownReporter` | `adapters/reporting/markdown_reporter.py` | Render a `CampaignResult` as a PR-friendly Markdown doc. |
+| `MarkdownReporter` | `adapters/reporting/markdown_reporter.py` | Render a `Report` as a PR-friendly Markdown doc. |
 | Multi-turn / conversational attacks | new `Attack` shape (`prompt: str` -> `turns: list[str]`) | Would touch `domain.models.attack` and every `Target.execute` implementation, but not the orchestrator's control flow. |
 | Retry/backoff policy | `application.execution_engine.ExecutionEngine` | Currently one attempt + timeout; a policy object could wrap the `target.execute` call. |
 | Import-boundary enforcement in CI | new `tool.importlinter` config | Encodes the dependency-direction rules in §2 as an automated check. |

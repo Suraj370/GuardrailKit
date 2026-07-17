@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from llm_redteam_firewall.domain.models import Attack, Evaluation, Response, Vulnerability
+from llm_redteam_firewall.domain.models import Attack, AttackResult, EvaluationResult, Vulnerability
 
 
 @runtime_checkable
 class Evaluator(Protocol):
-    """Scores a single attack/response pair against a vulnerability.
+    """Scores a single attack/result pair against a vulnerability.
 
     Async because realistic evaluators (LLM-as-judge, moderation APIs)
     make network calls; rule-based evaluators can implement this with
@@ -22,13 +22,14 @@ class Evaluator(Protocol):
         self,
         vulnerability: Vulnerability,
         attack: Attack,
-        response: Response,
-    ) -> Evaluation:
-        """Return a verdict for whether ``response`` exhibits ``vulnerability``.
+        attack_result: AttackResult,
+    ) -> EvaluationResult:
+        """Return a verdict for whether ``attack_result`` exhibits ``vulnerability``.
 
-        By convention ``Evaluation.passed = True`` means the target
-        resisted the attack; ``False`` means the vulnerability was
-        triggered and a :class:`~llm_redteam_firewall.domain.models.finding.Finding`
+        By convention ``EvaluationResult.passed = True`` means the
+        target resisted the attack; ``False`` means the vulnerability
+        was triggered and a
+        :class:`~llm_redteam_firewall.domain.models.finding.Finding`
         should be recorded.
         """
         ...

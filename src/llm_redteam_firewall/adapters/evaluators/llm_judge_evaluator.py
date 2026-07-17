@@ -3,13 +3,13 @@
 Not implemented. When implemented, this would send the vulnerability
 description, attack prompt, and target response to a judge model with
 a grading rubric and parse a structured verdict back into an
-``Evaluation``. No dependency on a specific LLM SDK is declared here;
-add one under an appropriate extra in ``pyproject.toml``.
+``EvaluationResult``. No dependency on a specific LLM SDK is declared
+here; add one under an appropriate extra in ``pyproject.toml``.
 """
 
 from __future__ import annotations
 
-from llm_redteam_firewall.domain.models import Attack, Evaluation, Response, Vulnerability
+from llm_redteam_firewall.domain.models import Attack, AttackResult, EvaluationResult, Vulnerability
 from llm_redteam_firewall.plugins import EVALUATORS
 
 
@@ -26,10 +26,10 @@ class LLMJudgeEvaluator:
         self,
         vulnerability: Vulnerability,
         attack: Attack,
-        response: Response,
-    ) -> Evaluation:
+        attack_result: AttackResult,
+    ) -> EvaluationResult:
         raise NotImplementedError(
             "LLMJudgeEvaluator is a scaffold placeholder. Implement by "
             "prompting self._judge_model with a grading rubric derived from "
-            "vulnerability, attack, and response, then parsing its verdict."
+            "vulnerability, attack, and attack_result, then parsing its verdict."
         )

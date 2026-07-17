@@ -8,8 +8,8 @@ from datetime import UTC, datetime
 from enum import StrEnum
 
 from .attack import Attack
-from .evaluation import Evaluation
-from .response import Response
+from .attack_result import AttackResult
+from .evaluation_result import EvaluationResult
 from .severity import Severity
 from .vulnerability import Vulnerability
 
@@ -37,8 +37,8 @@ class Finding:
 
     vulnerability: Vulnerability
     attack: Attack
-    response: Response
-    evaluation: Evaluation
+    attack_result: AttackResult
+    evaluation_result: EvaluationResult
     campaign_name: str
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     severity: Severity = Severity.MEDIUM
@@ -48,4 +48,4 @@ class Finding:
     @property
     def is_vulnerable(self) -> bool:
         """True when the attack defeated the target (evaluation failed)."""
-        return not self.evaluation.passed
+        return not self.evaluation_result.passed

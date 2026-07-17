@@ -14,7 +14,7 @@ import logging
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
-from llm_redteam_firewall.domain.models import Campaign, CampaignResult, Finding
+from llm_redteam_firewall.domain.models import Campaign, Finding, Report
 from llm_redteam_firewall.domain.ports import AttackGenerator, FindingsStorage, Reporter
 
 from .evaluation_engine import EvaluationEngine
@@ -24,7 +24,13 @@ logger = logging.getLogger(__name__)
 
 
 class CampaignOrchestrator:
-    """Runs a :class:`Campaign` end to end and returns its result."""
+    """Runs a :class:`Campaign` end to end and returns its :class:`Report`.
+
+    ``Report`` is immutable, so unlike a mutable "result" object it
+    cannot be built incrementally: findings are accumulated in a plain
+    local list while the campaign runs, and exactly one ``Report`` is
+    constructed once every vulnerability has been processed.
+    """
 
     def __init__(
         self,
@@ -40,8 +46,9 @@ class CampaignOrchestrator:
         self._storage = storage
         self._reporters = tuple(reporters)
 
-    async def run(self, campaign: Campaign) -> CampaignResult:
-        result = CampaignResult(campaign_name=campaign.name)
+    async def run(self, campaign: Campaign) -> Report:
+        started_at = datetime.now(UTC)
+        findings: list[Finding] = []
 
         for vulnerability in campaign.vulnerabilities:
             logger.info("generating attacks for vulnerability=%s", vulnerability.id)
@@ -52,24 +59,31 @@ class CampaignOrchestrator:
                 logger.warning("generator produced no attacks for vulnerability=%s", vulnerability.id)
                 continue
 
-            responses = await self._execution_engine.run(campaign.name, attacks)
-            evaluations = await self._evaluation_engine.run(vulnerability, attacks, responses)
+            attack_results = await self._execution_engine.run(campaign.name, attacks)
+            evaluation_results = await self._evaluation_engine.run(vulnerability, attacks, attack_results)
 
-            for attack, response, evaluation in zip(attacks, responses, evaluations, strict=True):
+            for attack, attack_result, evaluation_result in zip(
+                attacks, attack_results, evaluation_results, strict=True
+            ):
                 finding = Finding(
                     vulnerability=vulnerability,
                     attack=attack,
-                    response=response,
-                    evaluation=evaluation,
+                    attack_result=attack_result,
+                    evaluation_result=evaluation_result,
                     campaign_name=campaign.name,
                     severity=vulnerability.severity,
                 )
                 self._storage.save(finding)
-                result.findings.append(finding)
+                findings.append(finding)
 
-        result.finished_at = datetime.now(UTC)
+        report = Report(
+            campaign_name=campaign.name,
+            findings=tuple(findings),
+            started_at=started_at,
+            finished_at=datetime.now(UTC),
+        )
 
         for reporter in self._reporters:
-            reporter.report(result)
+            reporter.report(report)
 
-        return result
+        return report

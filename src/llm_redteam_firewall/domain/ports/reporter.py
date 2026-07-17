@@ -1,15 +1,15 @@
-"""Reporter port: renders a finished campaign result somewhere."""
+"""Reporter port: renders a finished campaign Report somewhere."""
 
 from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from llm_redteam_firewall.domain.models import CampaignResult
+from llm_redteam_firewall.domain.models import Report
 
 
 @runtime_checkable
 class Reporter(Protocol):
-    """Renders a :class:`CampaignResult` to some output surface.
+    """Renders a :class:`Report` to some output surface.
 
     Multiple reporters can be attached to a single campaign (e.g.
     console + markdown file + JSON export) — the orchestrator simply
@@ -18,6 +18,6 @@ class Reporter(Protocol):
 
     name: str
 
-    def report(self, result: CampaignResult) -> None:
-        """Render ``result``. Must not mutate it."""
+    def report(self, report: Report) -> None:
+        """Render ``report``. Must not mutate it (it is immutable anyway)."""
         ...

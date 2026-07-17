@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from llm_redteam_firewall.domain.models import Attack, ExecutionContext, Response
+from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
 
 
 @runtime_checkable
@@ -27,12 +27,12 @@ class Target(Protocol):
 
     name: str
 
-    async def execute(self, ctx: ExecutionContext, attack: Attack) -> Response:
-        """Send ``attack.prompt`` to the target and return its response.
+    async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
+        """Send ``attack.prompt`` to the target and return its result.
 
-        Implementations should prefer returning a ``Response`` with
-        ``error`` set over raising, so a single failed attack does not
-        abort an entire campaign. See
+        Implementations should prefer returning an ``AttackResult``
+        with ``error`` set over raising, so a single failed attack
+        does not abort an entire campaign. See
         :class:`llm_redteam_firewall.domain.errors.TargetExecutionError`
         for the raise-vs-return-error contract.
         """

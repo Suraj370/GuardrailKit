@@ -9,7 +9,7 @@ under the ``openai`` extra in ``pyproject.toml`` when implementing.
 
 from __future__ import annotations
 
-from llm_redteam_firewall.domain.models import Attack, ExecutionContext, Response
+from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
 from llm_redteam_firewall.plugins import TARGETS
 
 
@@ -24,9 +24,9 @@ class OpenAITarget:
         self._api_key = api_key
         self._base_url = base_url
 
-    async def execute(self, ctx: ExecutionContext, attack: Attack) -> Response:
+    async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
         raise NotImplementedError(
             "OpenAITarget is a scaffold placeholder. Implement by calling the "
             "OpenAI chat completions API with attack.prompt and mapping the "
-            "result onto a Response."
+            "result onto an AttackResult."
         )

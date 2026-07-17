@@ -52,7 +52,7 @@ adapters: `DummyAttackGenerator`, `MockTarget`, `DummyEvaluator`,
 
 | Package                          | Responsibility                                                                 | Depends on |
 |-----------------------------------|---------------------------------------------------------------------------------|------------|
-| `domain.models`                   | Entities/value objects: `Vulnerability`, `Attack`, `Response`, `Evaluation`, `Finding`, `Campaign` | *(nothing)* |
+| `domain.models`                   | Entities/value objects: `Campaign`, `Vulnerability`, `Attack`, `AttackResult`, `EvaluationResult`, `Finding`, `Report` | *(nothing)* |
 | `domain.ports`                    | Interfaces (`Protocol`s): `AttackGenerator`, `Target`, `Evaluator`, `FindingsStorage`, `Reporter` | `domain.models` |
 | `domain.errors`                   | Shared exception hierarchy                                                     | *(nothing)* |
 | `application`                     | Use cases: `CampaignOrchestrator`, `ExecutionEngine`, `EvaluationEngine`         | `domain` |
@@ -72,7 +72,7 @@ details: see [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ```python
 # src/llm_redteam_firewall/adapters/targets/my_target.py
-from llm_redteam_firewall.domain.models import Attack, ExecutionContext, Response
+from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
 from llm_redteam_firewall.plugins import TARGETS
 
 @TARGETS.register("my_target")
@@ -82,8 +82,8 @@ class MyTarget:
     def __init__(self, endpoint: str) -> None:
         self._endpoint = endpoint
 
-    async def execute(self, ctx: ExecutionContext, attack: Attack) -> Response:
-        ...  # call your system, return a Response
+    async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
+        ...  # call your system, return an AttackResult
 ```
 
 Then reference it by name in a campaign config:

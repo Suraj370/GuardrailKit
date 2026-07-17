@@ -6,7 +6,7 @@ Formatting only — no grading or business logic lives here.
 
 from __future__ import annotations
 
-from llm_redteam_firewall.domain.models import CampaignResult
+from llm_redteam_firewall.domain.models import Report
 from llm_redteam_firewall.plugins import REPORTERS
 
 
@@ -16,12 +16,12 @@ class ConsoleReporter:
 
     name = "console"
 
-    def report(self, result: CampaignResult) -> None:
-        vulnerable = result.vulnerable_findings
-        print(f"Campaign: {result.campaign_name}")
-        print(f"  attacks run   : {result.total_attacks}")
+    def report(self, report: Report) -> None:
+        vulnerable = report.vulnerable_findings
+        print(f"Campaign: {report.campaign_name}")
+        print(f"  attacks run   : {report.total_attacks}")
         print(f"  vulnerable    : {len(vulnerable)}")
-        print(f"  pass rate     : {result.pass_rate:.0%}")
+        print(f"  pass rate     : {report.pass_rate:.0%}")
         for finding in vulnerable:
             print(
                 f"  [{finding.severity.value.upper()}] {finding.vulnerability.name} "

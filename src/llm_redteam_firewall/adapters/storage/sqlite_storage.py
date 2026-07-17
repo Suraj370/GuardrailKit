@@ -1,9 +1,9 @@
 """SQLiteStorage: extension-point stub for durable local persistence.
 
 Not implemented. When implemented, this would serialize each
-:class:`Finding` (including its nested Vulnerability/Attack/Response/
-Evaluation) into a small relational schema so findings survive process
-restarts and can be queried across campaign runs. Uses only the
+:class:`Finding` (including its nested Vulnerability/Attack/AttackResult/
+EvaluationResult) into a small relational schema so findings survive
+process restarts and can be queried across campaign runs. Uses only the
 standard library ``sqlite3`` module — no extra dependency required.
 """
 

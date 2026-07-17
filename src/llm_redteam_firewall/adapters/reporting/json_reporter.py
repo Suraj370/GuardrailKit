@@ -14,7 +14,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from llm_redteam_firewall.domain.models import CampaignResult
+from llm_redteam_firewall.domain.models import Report
 from llm_redteam_firewall.plugins import REPORTERS
 
 
@@ -30,14 +30,14 @@ def _json_default(value: Any) -> Any:
 
 @REPORTERS.register("json")
 class JSONReporter:
-    """Writes the campaign result to ``output_path`` as JSON."""
+    """Writes the campaign report to ``output_path`` as JSON."""
 
     name = "json"
 
     def __init__(self, output_path: str) -> None:
         self._output_path = Path(output_path)
 
-    def report(self, result: CampaignResult) -> None:
+    def report(self, report: Report) -> None:
         self._output_path.parent.mkdir(parents=True, exist_ok=True)
         with self._output_path.open("w", encoding="utf-8") as fh:
-            json.dump(dataclasses.asdict(result), fh, default=_json_default, indent=2)
+            json.dump(dataclasses.asdict(report), fh, default=_json_default, indent=2)

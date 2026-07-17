@@ -20,10 +20,10 @@ async def test_mock_target_returns_canned_response() -> None:
     target = MockTarget(canned_response="no.")
     ctx = ExecutionContext(campaign_name="c1")
 
-    response = await target.execute(ctx, _attack())
+    result = await target.execute(ctx, _attack())
 
-    assert response.output == "no."
-    assert response.succeeded is True
+    assert result.output == "no."
+    assert result.succeeded is True
 
 
 @pytest.mark.asyncio
@@ -31,9 +31,9 @@ async def test_callback_target_wraps_sync_callable() -> None:
     target = CallbackTarget(callback=lambda prompt: f"you said: {prompt}")
     ctx = ExecutionContext(campaign_name="c1")
 
-    response = await target.execute(ctx, _attack())
+    result = await target.execute(ctx, _attack())
 
-    assert response.output == "you said: hello"
+    assert result.output == "you said: hello"
 
 
 @pytest.mark.asyncio
@@ -44,9 +44,9 @@ async def test_callback_target_wraps_async_callable() -> None:
     target = CallbackTarget(callback=_callback)
     ctx = ExecutionContext(campaign_name="c1")
 
-    response = await target.execute(ctx, _attack())
+    result = await target.execute(ctx, _attack())
 
-    assert response.output == "async: hello"
+    assert result.output == "async: hello"
 
 
 @pytest.mark.asyncio

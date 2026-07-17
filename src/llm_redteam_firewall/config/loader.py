@@ -22,7 +22,7 @@ import yaml
 from llm_redteam_firewall import adapters  # noqa: F401
 from llm_redteam_firewall.application import CampaignOrchestrator, EvaluationEngine, ExecutionEngine
 from llm_redteam_firewall.domain.errors import ConfigurationError
-from llm_redteam_firewall.domain.models import Campaign, CampaignResult, Vulnerability
+from llm_redteam_firewall.domain.models import Campaign, Report, Vulnerability
 from llm_redteam_firewall.domain.ports import (
     AttackGenerator,
     Evaluator,
@@ -47,7 +47,7 @@ class CampaignRunner:
     campaign: Campaign
     orchestrator: CampaignOrchestrator
 
-    async def run(self) -> CampaignResult:
+    async def run(self) -> Report:
         return await self.orchestrator.run(self.campaign)
 
 

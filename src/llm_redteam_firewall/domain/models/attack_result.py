@@ -1,4 +1,4 @@
-"""The Response entity: what a Target returned for a given Attack."""
+"""The AttackResult entity: what a Target returned for a given Attack."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
-class Response:
+class AttackResult:
     """The observed output of executing an :class:`Attack` against a Target.
 
     ``error`` is set (and ``output`` typically empty) when the target

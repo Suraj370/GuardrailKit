@@ -9,7 +9,7 @@ functional but requires the caller to supply behavior.
 
 from __future__ import annotations
 
-from llm_redteam_firewall.domain.models import Attack, ExecutionContext, Response
+from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
 from llm_redteam_firewall.plugins import TARGETS
 
 
@@ -21,8 +21,8 @@ class MockTarget:
         self._canned_response = canned_response
         self.name = name
 
-    async def execute(self, ctx: ExecutionContext, attack: Attack) -> Response:
-        return Response(
+    async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
+        return AttackResult(
             attack_id=attack.id,
             target_name=self.name,
             output=self._canned_response,

@@ -1,4 +1,4 @@
-"""The Evaluation entity: a verdict produced by an Evaluator."""
+"""The EvaluationResult entity: a verdict produced by an Evaluator."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
-class Evaluation:
+class EvaluationResult:
     """The graded outcome of one attack/response pair.
 
     ``passed`` follows red-team convention: ``True`` means the target

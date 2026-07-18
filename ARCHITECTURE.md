@@ -1,93 +1,153 @@
 # Architecture
 
-`llm-redteam-firewall` follows Clean Architecture / Hexagonal Architecture:
-domain logic sits at the center, knows nothing about frameworks or I/O, and
-everything else — adapters, config, CLI — depends *inward* on it, never the
-reverse.
+`llm-redteam-firewall` is a **pluggable LLM red-team harness** built with
+**Clean Architecture / Hexagonal Architecture**. Domain logic sits at the
+center and knows nothing about frameworks or I/O. Everything else —
+adapters, config, CLI — depends *inward* on the domain, never the reverse.
 
-## 1. Folder structure
+> **Status (v0.1.0):** Scaffold with a fully wired campaign pipeline and a
+> rule-based policy framework. Dummy/mock/in-memory adapters run end-to-end
+> without network access. Several real integrations remain
+> `NotImplementedError` stubs (see [§10](#10-implementation-status--extension-points)).
+
+---
+
+## 1. Purpose
+
+Red-teaming an LLM application means running the same shape of pipeline
+against wildly different systems:
+
+| Concern | Examples |
+|---------|----------|
+| **Targets** | Hosted API, in-house agent, RAG pipeline, local model |
+| **Attack sources** | Static prompts, fuzzing library, LLM mutator |
+| **Graders** | Keyword rules, judge model, classifier |
+| **Firewall rules** | PII / secret / prompt-leak / tool-misuse detectors |
+
+This framework treats all of those as **swappable plugins** behind narrow
+interfaces, so orchestration — *for each vulnerability: generate → execute →
+evaluate → store → report* — never has to change when an adapter is swapped.
+
+There is a second, parallel path for **policy evaluation** (firewall rules
+over any attack/response pair), independent of the campaign vulnerability list.
+
+---
+
+## 2. High-level flows
+
+### 2.1 Campaign pipeline
+
+```
+Campaign
+  └─ for each Vulnerability
+       ├─ AttackGenerator.generate(...)  → list[Attack]
+       ├─ ExecutionEngine  ──► Target.execute(...)  → list[AttackResult]
+       ├─ EvaluationEngine ──► Evaluator.evaluate(...) → list[EvaluationResult]
+       ├─ build Finding(s) → FindingsStorage.save(...)
+       └─ Report → Reporter.report(...)  (×N reporters)
+```
+
+### 2.2 Policy (firewall) pipeline
+
+```
+Attack + Response
+  └─ PolicyEngine
+       └─ for each Policy in PolicyRegistry
+            └─ Policy.evaluate(attack, response) → list[Finding]
+       └─ aggregate all findings
+```
+
+Policies are **rule-based** today (regex / pattern matching). They do not
+require a campaign vulnerability list and are not yet wired into
+`CampaignOrchestrator` (they can be invoked independently via `PolicyEngine`).
+
+---
+
+## 3. Repository layout
 
 ```
 llm-redteam-firewall/
-├── pyproject.toml
-├── Makefile
+├── pyproject.toml                 # package metadata, deps, tool config
+├── Makefile                       # install, test, lint, example runners
 ├── README.md
-├── ARCHITECTURE.md
+├── ARCHITECTURE.md                # this file
 ├── LICENSE
 ├── configs/
-│   └── example_campaign.yaml
+│   └── example_campaign.yaml      # YAML-driven smoke campaign
 ├── examples/
-│   └── run_example_campaign.py
+│   └── run_example_campaign.py    # programmatic smoke campaign
 ├── src/
 │   └── llm_redteam_firewall/
-│       ├── __init__.py
-│       ├── domain/                    # innermost ring: zero dependencies
+│       ├── __init__.py            # package version + public orientation
+│       ├── domain/                # innermost ring — zero project deps
 │       │   ├── errors.py
-│       │   ├── models/                # entities & value objects (dataclasses)
-│       │   │   ├── severity.py
-│       │   │   ├── vulnerability.py
-│       │   │   ├── attack.py
-│       │   │   ├── attack_result.py
-│       │   │   ├── evaluation_result.py
-│       │   │   ├── finding.py
-│       │   │   ├── execution_context.py
-│       │   │   ├── campaign.py
-│       │   │   └── report.py
-│       │   └── ports/                 # interfaces (typing.Protocol)
-│       │       ├── attack_generator.py
-│       │       ├── target.py
-│       │       ├── evaluator.py
-│       │       ├── storage.py
-│       │       └── reporter.py
-│       ├── application/               # use cases, depends only on domain
-│       │   ├── campaign_orchestrator.py
-│       │   ├── execution_engine.py
-│       │   └── evaluation_engine.py
-│       ├── adapters/                  # concrete port implementations
-│       │   ├── generators/            # dummy (functional), garak (stub)
-│       │   ├── targets/               # mock, callback (functional);
-│       │   │                          # openai, anthropic, http, local_model,
-│       │   │                          # langgraph (stubs)
-│       │   ├── evaluators/            # dummy (functional), llm_judge (stub)
-│       │   ├── storage/               # in_memory (functional), sqlite (stub)
-│       │   └── reporting/             # console, json (functional); markdown (stub)
-│       ├── plugins/                   # Registry + entry-point discovery
-│       │   └── registry.py
-│       ├── config/                    # composition root: YAML -> wired campaign
-│       │   ├── schema.py              # pydantic models
-│       │   └── loader.py              # dependency injection happens here
-│       └── cli/
-│           └── main.py
-└── tests/
+│       │   ├── models/            # entities & value objects (dataclasses)
+│       │   └── ports/             # interfaces (ABC / Protocol)
+│       ├── application/           # use cases — depends only on domain
+│       ├── adapters/              # concrete port implementations
+│       │   ├── generators/
+│       │   ├── targets/
+│       │   ├── evaluators/
+│       │   ├── policies/
+│       │   ├── storage/
+│       │   └── reporting/
+│       ├── plugins/               # Registry + PolicyRegistry
+│       ├── config/                # composition root (YAML → wired runner)
+│       └── cli/                   # thin argparse entrypoint
+└── tests/                         # mirrors package layout
     ├── domain/
     ├── application/
     ├── adapters/
     ├── plugins/
-    └── config/
+    ├── config/
+    └── conftest.py
 ```
 
-## 2. Dependency direction
+---
+
+## 4. Layered architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  cli  /  examples                                           │  outer
+├─────────────────────────────────────────────────────────────┤
+│  config  (composition root: YAML parse + DI wiring)         │
+├─────────────────────────────────────────────────────────────┤
+│  adapters  (generators, targets, evaluators, policies, …)   │
+│  plugins   (name → factory / instance registries)           │
+├─────────────────────────────────────────────────────────────┤
+│  application  (CampaignOrchestrator, engines)               │
+├─────────────────────────────────────────────────────────────┤
+│  domain  (models, ports, errors)                            │  inner
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 4.1 Dependency rules
 
 ```mermaid
 graph LR
-    subgraph outer["composition root"]
+    subgraph outer["composition / entry"]
         CLI[cli]
         CFG[config]
+        EX[examples]
     end
-    subgraph adapters["adapters (generators / targets / evaluators / storage / reporting)"]
-        ADP[" "]
+    subgraph adapters["adapters"]
+        ADP["generators / targets / evaluators / policies / storage / reporting"]
     end
     subgraph app["application"]
-        APP[" "]
+        APP["orchestrator + engines"]
     end
-    subgraph dom["domain (models + ports + errors)"]
-        DOM[" "]
+    subgraph dom["domain"]
+        DOM["models + ports + errors"]
     end
-    subgraph plg["plugins (registry)"]
-        PLG[" "]
+    subgraph plg["plugins"]
+        PLG["Registry + PolicyRegistry"]
     end
 
     CLI --> CFG
+    EX --> APP
+    EX --> PLG
+    EX --> ADP
     CFG --> APP
     CFG --> ADP
     CFG --> PLG
@@ -97,136 +157,494 @@ graph LR
     PLG --> DOM
 ```
 
-Rules, enforced by convention (and checkable with an import-linter-style tool
-later, see *Future extension points*):
+| Package | May import | Must not import |
+|---------|------------|-----------------|
+| `domain` | stdlib only | anything else in this project |
+| `application` | `domain` only | `adapters`, `plugins`, `config`, `cli` |
+| `plugins` | `domain.ports` (typing) | `application`, `adapters`, `config` |
+| `adapters.*` | `domain`, `plugins` | `application`, other adapter packages, `config`, `cli` |
+| `config` | **everything** (composition root) | — |
+| `cli` | `config` (+ domain errors for exit codes) | adapters / application directly |
 
-- `domain` imports nothing from this project.
-- `application` imports only `domain`.
-- `adapters.*` import `domain` and `plugins` (to self-register); never
-  `application`, never each other.
-- `plugins` imports only `domain.ports` (for typing the registries).
-- `config` is the **composition root** — the only package allowed to import
-  `application`, `adapters`, and `plugins` all at once, and the only place
-  concrete adapter classes get instantiated.
-- `cli` imports only `config`.
+**Practical effect:** `CampaignOrchestrator` has never heard of `MockTarget` or
+`DummyAttackGenerator`. It only depends on ports (`AttackGenerator`, `Target`,
+`Evaluator`, `FindingsStorage`, `Reporter`) and application engines.
 
-The practical effect: `CampaignOrchestrator` (in `application`) has never
-heard of `OpenAITarget` or `DummyAttackGenerator`. It only knows the
-`Target`, `AttackGenerator`, `Evaluator`, `FindingsStorage`, and `Reporter`
-`Protocol`s from `domain.ports`.
+---
 
-## 3. Plugin architecture
+## 5. Domain layer
 
-Each port has a matching `Registry[T]` in `llm_redteam_firewall.plugins`
-(`GENERATORS`, `TARGETS`, `EVALUATORS`, `STORAGE`, `REPORTERS`). Adapters
-register themselves by name, either:
+Path: `src/llm_redteam_firewall/domain/`
 
-**In-tree**, via decorator (see e.g. `adapters/generators/dummy_generator.py`):
+The domain is framework-free: plain dataclasses, enums, ABCs/Protocols, and
+a small exception hierarchy. No Pydantic, no YAML, no HTTP clients.
+
+### 5.0 Vulnerability catalog (`domain.vulnerabilities`)
+
+A separate subpackage, not a `domain.models` entity: `VulnerabilityDefinition`
+(`id`, `name`, `description`, `default_attack_generator`,
+`default_attack_categories`, `default_policies`, `severity`, `tags`) is
+reference data describing a *kind* of vulnerability, distinct from the
+`Vulnerability` a campaign actually authors. `VulnerabilityRegistry`
+(`register` / `get` / `all` / `names`) holds them by id, pre-seeded with
+six built-ins (`prompt_injection`, `jailbreak`, `prompt_leakage`,
+`pii_leakage`, `secret_leakage`, `tool_misuse`) at the module-level
+singleton `VULNERABILITY_REGISTRY`. `to_vulnerability(definition, ...)`
+projects a definition into a concrete `Vulnerability`, carrying the
+implementation defaults in `Vulnerability.metadata` rather than adding
+new fields to that entity.
+
+This lets a campaign reference a vulnerability by id alone —
+`config.loader` resolves `{id: pii_leakage}` (no `name`/`category`)
+against the registry; explicit `name`+`category` in YAML still bypasses
+the registry entirely, unchanged from before. Nothing here imports
+`plugins` or `adapters` — the definitions only carry plugin *names* as
+strings, so the domain layer's "stdlib only" import rule holds. Garak
+probe mapping is an intentional gap: no field for it exists yet (see
+§10).
+
+### 5.1 Models (`domain.models`)
+
+| Entity | Role |
+|--------|------|
+| `Severity` | Ordered scale: `low` → `medium` → `high` → `critical` |
+| `Vulnerability` | Named class of undesirable behavior to probe |
+| `Campaign` | Named run: vulnerabilities + limits (max attacks, concurrency) |
+| `Attack` | One concrete probe prompt (immutable) |
+| `AttackResult` | Target output (or error) for one attack |
+| `Response` | Policy-facing view of target output; converts to/from `AttackResult` |
+| `ExecutionContext` | Per-execution metadata (campaign name, timeout) |
+| `EvaluationResult` | Verdict produced by an `Evaluator`: `passed=True` means target *resisted* the attack |
+| `Finding` | Full story: vulnerability + attack + result + verdict (`passed`/`reasoning`/`score`/`source` as plain fields, not a nested `EvaluationResult`); unit of storage/report |
+| `FindingStatus` | Lifecycle: open, confirmed, false_positive, accepted_risk, resolved |
+| `Report` | Immutable end-of-campaign summary (`pass_rate`, `vulnerable_findings`) |
+
+**Campaign data flow (entities):**
+
+```
+Campaign → Vulnerability → Attack → AttackResult
+         → EvaluationResult → Finding → Report
+```
+
+**Policy data flow (entities):**
+
+```
+Attack + Response → Finding  (via Policy._finding helper)
+```
+
+`Finding` does not embed `EvaluationResult` — it carries its verdict as
+plain fields (`passed`, `reasoning`, `score`, `source`). This is what
+keeps the two data flows above genuinely independent: `Policy` (and its
+`_finding` helper) never imports or constructs `EvaluationResult`, and
+`EvaluationResult` is only ever created by `Evaluator` implementations
+(and `EvaluationEngine`, which orchestrates them). `CampaignOrchestrator`
+is the sole place that reads an `EvaluationResult`'s fields to populate
+a `Finding`, for the campaign pipeline's evaluator-sourced findings.
+
+Convention for grading:
+
+- `EvaluationResult.passed = True` → safe / resisted
+- `EvaluationResult.passed = False` → vulnerability triggered → finding is “vulnerable”
+- `Finding.is_vulnerable` ≡ `not finding.passed` (true regardless of
+  whether the finding came from an `Evaluator` or a `Policy`)
+
+### 5.2 Ports (`domain.ports`)
+
+Ports are the hexagon’s boundary. Application code depends only on these.
+
+| Port | Kind | Responsibility |
+|------|------|----------------|
+| `AttackGenerator` | ABC | `generate(vulnerability, max_attacks) → list[Attack]` |
+| `Target` | ABC | `async execute(ctx, attack) → AttackResult` |
+| `Evaluator` | ABC | `async evaluate(vuln, attack, result) → EvaluationResult` |
+| `Policy` | ABC | `evaluate(attack, response) → list[Finding]` |
+| `Reporter` | ABC | `report(report) → None` |
+| `FindingsStorage` | Protocol | `save(finding)`, `list(campaign_name?)` |
+
+`Policy` includes a protected `_finding(...)` helper so rule adapters can emit
+consistent `Finding` objects without re-implementing vulnerability/result wiring.
+
+### 5.3 Errors (`domain.errors`)
+
+```
+RedTeamError
+├── AttackGenerationError
+├── TargetExecutionError
+├── EvaluationError
+├── StorageError
+├── ConfigurationError
+└── PluginNotFoundError
+```
+
+Adapters translate SDK/HTTP failures into these types so the application layer
+never imports adapter-specific exceptions.
+
+---
+
+## 6. Application layer
+
+Path: `src/llm_redteam_firewall/application/`
+
+Use cases that orchestrate ports. **No knowledge of concrete adapters.**
+
+### 6.1 `CampaignOrchestrator`
+
+Top-level campaign use case. Shape of a full run:
+
+1. For each `Vulnerability` in the campaign  
+2. Generate attacks via `AttackGenerator`  
+3. Execute via `ExecutionEngine`  
+4. Grade via `EvaluationEngine`  
+5. Build `Finding`s, persist via `FindingsStorage`  
+6. Build one immutable `Report`  
+7. Invoke every configured `Reporter`
+
+Does **not** currently invoke `PolicyEngine` (policies are a separate path).
+
+### 6.2 `ExecutionEngine`
+
+- Runs a batch of attacks against one `Target`
+- Bounded concurrency (`asyncio.Semaphore`)
+- Per-attack timeout (`asyncio.wait_for`)
+- Individual failures become `AttackResult(error=...)` rather than aborting the batch
+
+### 6.3 `EvaluationEngine`
+
+- Pairs attacks with attack results (strict length check)
+- Bounded concurrency
+- Failed target executions are treated as **non-vulnerable** (`passed=True`) —
+  no evidence of a security issue if the target never answered
+
+### 6.4 `PolicyEngine`
+
+- Accepts an explicit sequence of `Policy` instances (typically `POLICIES.all()`)
+- Runs every policy on each attack/response pair and aggregates findings
+- Optional `campaign_name` stamped onto findings that leave it empty
+- `evaluate_batch` for many pairs
+
+---
+
+## 7. Plugin system
+
+Path: `src/llm_redteam_firewall/plugins/`
+
+### 7.1 Factory `Registry[T]`
+
+Used for **pick-one-by-config** ports:
+
+| Global | Category string | Port |
+|--------|-----------------|------|
+| `GENERATORS` | `generators` | `AttackGenerator` |
+| `TARGETS` | `targets` | `Target` |
+| `EVALUATORS` | `evaluators` | `Evaluator` |
+| `STORAGE` | `storage` | `FindingsStorage` |
+| `REPORTERS` | `reporters` | `Reporter` |
+
+Features:
+
+- `@REGISTRY.register("name")` decorator (in-tree)
+- `register_factory(name, factory)` imperative API
+- `create(name, **kwargs)` instantiation
+- Lazy setuptools **entry-point** discovery under
+  `llm_redteam_firewall.<category>` for out-of-tree plugins
+
+### 7.2 `PolicyRegistry` (`POLICIES`)
+
+Policies are different: the engine runs **all** registered rules, not one
+chosen by config type. `PolicyRegistry` therefore stores **live instances**:
 
 ```python
-@GENERATORS.register("dummy")
-class DummyAttackGenerator:
+@POLICIES.register
+class PromptLeakPolicy(Policy):
+    name = "prompt_leak"
     ...
 ```
 
-**Out-of-tree**, via a setuptools entry point in a *separate* package's
-`pyproject.toml`:
+API: `add`, `register` (decorator), `get`, `all`, `names`, `clear`.
 
-```toml
-[project.entry-points."llm_redteam_firewall.generators"]
-garak = "llm_redteam_garak.generator:GarakAttackGenerator"
+---
+
+## 8. Adapters
+
+Path: `src/llm_redteam_firewall/adapters/`
+
+Outer ring of the hexagon. Each subpackage implements one port, self-registers
+on import, and never imports `application` or sibling adapter packages.
+
+Importing `llm_redteam_firewall.adapters` registers **all** in-tree plugins
+as a side effect (used by config loader, CLI, tests, examples).
+
+### 8.1 Generators (`adapters.generators`)
+
+| Name | Status | Notes |
+|------|--------|-------|
+| `dummy` | **Functional** | Template prompts from vulnerability description |
+| `garak` | Stub | Placeholder for Garak probe integration |
+
+### 8.2 Targets (`adapters.targets`)
+
+| Name | Status | Notes |
+|------|--------|-------|
+| `mock` | **Functional** | Canned response; no network |
+| `callback` | **Functional** | User-supplied Python callable |
+| `openai` | Stub | Optional extra: `openai` |
+| `anthropic` | Stub | Optional extra: `anthropic` |
+| `http` | Stub | Optional extra: `httpx` |
+| `local_model` | Stub | Local transformers / vLLM / llama.cpp |
+| `langgraph` | Stub | Optional extra: `langgraph` |
+
+### 8.3 Evaluators (`adapters.evaluators`)
+
+| Name | Status | Notes |
+|------|--------|-------|
+| `dummy` | **Functional** | Refusal-keyword match grader |
+| `rule_based` | **Functional** | Runs every registered `Policy` (§8.4) against the pair; falls back to refusal-keyword match if none fire |
+| `llm_judge` | Stub | Future LLM-as-judge |
+
+### 8.4 Policies (`adapters.policies`)
+
+All **functional**, rule/regex-based (no LLM judge):
+
+| Name | Severity | Detects |
+|------|----------|---------|
+| `prompt_leak` | high | System-prompt / instruction disclosure phrases |
+| `pii_leak` | high | Email, SSN, phone, credit-card patterns |
+| `secret_leak` | critical | API keys, private keys, tokens, secret assignments |
+| `tool_misuse` | high | Destructive shell, sensitive paths, shell tool-calls, etc. |
+
+### 8.5 Storage (`adapters.storage`)
+
+| Name | Status |
+|------|--------|
+| `in_memory` | **Functional** |
+| `sqlite` | Stub |
+
+### 8.6 Reporting (`adapters.reporting`)
+
+| Name | Status |
+|------|--------|
+| `console` | **Functional** |
+| `json` | **Functional** (writes to path) |
+| `html` | **Functional** (writes a standalone HTML page to path) |
+| `markdown` | Stub |
+
+---
+
+## 9. Configuration & CLI (composition root)
+
+### 9.1 Config schema (`config.schema`)
+
+Pydantic models (only use of Pydantic in the project — appropriate for
+untrusted YAML at the boundary):
+
+- `PluginSpec` — `{ type, params }`
+- `VulnerabilityConfig`
+- `CampaignConfig` — full campaign YAML shape
+
+### 9.2 Loader (`config.loader`)
+
+**Composition root** — the only place allowed to import application + adapters +
+plugins together:
+
+1. `load_campaign_config(path)` — read YAML → validate → `CampaignConfig`
+2. `build_campaign_runner(config)` — resolve plugins via registries, construct
+   engines + orchestrator + domain `Campaign`
+3. `load_campaign_runner(path)` — convenience combining both
+
+Returns a `CampaignRunner` with `async run() → Report`.
+
+**Note:** Policy plugins register with `POLICIES` but are **not** selected from
+campaign YAML today; policy runs are programmatic via `PolicyEngine`.
+
+### 9.3 CLI (`cli.main`)
+
+```text
+llm-redteam-firewall run --config <path>
 ```
 
-`Registry.discover_entry_points()` loads these lazily on first lookup,
-using the group naming convention `llm_redteam_firewall.<category>`
-(`generators`, `targets`, `evaluators`, `storage`, `reporters`).
+- Thin argparse wrapper
+- Exit codes: `0` clean, `1` vulnerable findings present, `2` config/plugin error
+- Entry point: `llm-redteam-firewall` → `llm_redteam_firewall.cli.main:main`
 
-The composition root (`config/loader.py`) resolves plugins purely by the
-string in `type:` from the campaign YAML — `GENERATORS.create(spec.type,
-**spec.params)` — so adding a real `GarakAttackGenerator` later means
-writing one file (or one external package) and changing a config value.
-No orchestration, engine, or CLI code changes.
+### 9.4 Example YAML shape
 
-## 4. Configuration system
+```yaml
+name: example-campaign
+generator:  { type: dummy }
+target:     { type: mock, params: { canned_response: "..." } }
+evaluator:  { type: dummy }
+storage:    { type: in_memory }
+reporters:
+  - { type: console }
+  - { type: json, params: { output_path: build/results.json } }
+max_attacks_per_vulnerability: 3
+concurrency: 3
+timeout_seconds: 30
+vulnerabilities:
+  - id: pii-leakage
+    name: PII Leakage
+    category: pii_leakage
+    severity: high
+```
 
-`config/schema.py` defines the YAML shape with Pydantic (`CampaignConfig`,
-`PluginSpec`, `VulnerabilityConfig`) — this is the framework's only use of
-Pydantic, since config parsing is exactly the kind of untrusted-input
-boundary Pydantic is for. `config/loader.py`:
-
-1. `load_campaign_config(path)` — parse + validate YAML into `CampaignConfig`.
-2. `build_campaign_runner(config)` — the **dependency-injection** step:
-   resolve each `PluginSpec` through the matching registry, construct
-   `ExecutionEngine`/`EvaluationEngine` around the resolved target/evaluator,
-   and inject everything into a `CampaignOrchestrator`.
-
-## 5. Example campaign execution — sequence diagram
-
-This is what `examples/run_example_campaign.py` and
-`llm-redteam-firewall run --config configs/example_campaign.yaml` both do,
-using the dummy/mock/in-memory reference adapters.
+### 9.5 Campaign sequence (YAML / CLI path)
 
 ```mermaid
 sequenceDiagram
     participant CLI as cli.main
     participant Loader as config.loader
     participant Orch as CampaignOrchestrator
-    participant Gen as AttackGenerator (dummy)
+    participant Gen as AttackGenerator
     participant Exec as ExecutionEngine
-    participant Tgt as Target (mock)
+    participant Tgt as Target
     participant Eval as EvaluationEngine
-    participant Grader as Evaluator (dummy)
-    participant Store as FindingsStorage (in_memory)
-    participant Rep as Reporter (console/json)
+    participant Grader as Evaluator
+    participant Store as FindingsStorage
+    participant Rep as Reporter
 
     CLI->>Loader: load_campaign_runner(path)
-    Loader->>Loader: parse & validate YAML
-    Loader->>Loader: resolve plugins via Registry.create(...)
-    Loader-->>CLI: CampaignRunner(campaign, orchestrator)
+    Loader->>Loader: parse YAML + Registry.create(...)
+    Loader-->>CLI: CampaignRunner
     CLI->>Orch: run(campaign)
 
-    loop for each Vulnerability in campaign
-        Orch->>Gen: generate(vulnerability, max_attacks)
-        Gen-->>Orch: list[Attack]
-        Orch->>Exec: run(campaign.name, attacks)
-        loop for each Attack (bounded concurrency)
+    loop each Vulnerability
+        Orch->>Gen: generate(vuln, max)
+        Gen-->>Orch: attacks
+        Orch->>Exec: run(name, attacks)
+        loop each Attack (bounded concurrency)
             Exec->>Tgt: execute(ctx, attack)
             Tgt-->>Exec: AttackResult
         end
-        Exec-->>Orch: list[AttackResult]
-        Orch->>Eval: run(vulnerability, attacks, attack_results)
-        loop for each (Attack, AttackResult) pair
-            Eval->>Grader: evaluate(vulnerability, attack, attack_result)
+        Exec-->>Orch: attack_results
+        Orch->>Eval: run(vuln, attacks, results)
+        loop each pair
+            Eval->>Grader: evaluate(...)
             Grader-->>Eval: EvaluationResult
         end
-        Eval-->>Orch: list[EvaluationResult]
-        loop for each (Attack, AttackResult, EvaluationResult)
+        Eval-->>Orch: evaluation_results
+        loop each triple
             Orch->>Store: save(Finding)
         end
     end
-
-    Note over Orch: construct one immutable Report from<br/>the accumulated findings
 
     Orch->>Rep: report(Report)
     Orch-->>CLI: Report
 ```
 
-## 6. Future extension points
+---
 
-Each of these is a scaffold stub today (`NotImplementedError` bodies,
-already registered under a plugin name) — implementing one never requires
-touching `domain`, `application`, `plugins`, or `cli`:
+## 10. Implementation status & extension points
 
-| Extension | Where | Notes |
-|---|---|---|
-| `GarakAttackGenerator` | `adapters/generators/garak_generator.py` (or a separate `llm-redteam-garak` package) | Map `Vulnerability.category` to Garak probes; wrap probe output as `Attack`s. The whole reason `AttackGenerator` is a `Protocol` rather than a base class you must subclass. |
-| Real `OpenAITarget` / `AnthropicTarget` | `adapters/targets/` | Wire in the respective SDK behind the existing constructor signatures. |
-| `HTTPTarget` | `adapters/targets/http_target.py` | Add `httpx`, POST `attack.prompt`, parse the configured response field — works against a FastAPI service or any other HTTP backend. |
-| `LocalModelTarget` | `adapters/targets/local_model_target.py` | Lazy-load a `transformers`/`vllm`/`llama.cpp` model once, not per call. |
-| `LangGraphTarget` | `adapters/targets/langgraph_target.py` | Invoke a compiled graph; record intermediate steps in `AttackResult.raw`. |
-| `LLMJudgeEvaluator` | `adapters/evaluators/llm_judge_evaluator.py` | Prompt a judge model with a grading rubric; parse a structured verdict. |
-| `SQLiteStorage` | `adapters/storage/sqlite_storage.py` | Durable local persistence with only the stdlib `sqlite3` module. |
-| `MarkdownReporter` | `adapters/reporting/markdown_reporter.py` | Render a `Report` as a PR-friendly Markdown doc. |
-| Multi-turn / conversational attacks | new `Attack` shape (`prompt: str` -> `turns: list[str]`) | Would touch `domain.models.attack` and every `Target.execute` implementation, but not the orchestrator's control flow. |
-| Retry/backoff policy | `application.execution_engine.ExecutionEngine` | Currently one attempt + timeout; a policy object could wrap the `target.execute` call. |
-| Import-boundary enforcement in CI | new `tool.importlinter` config | Encodes the dependency-direction rules in §2 as an automated check. |
+### Functional today (no external services)
+
+- Pipeline: generate → execute → evaluate → store → report  
+- Adapters: `dummy` generator, `mock`/`callback` targets, `dummy`/`rule_based`
+  evaluators, `in_memory` storage, `console`/`json`/`html` reporters  
+- Policies: all four rule-based policies + `PolicyEngine`  
+- CLI + YAML config + example script  
+
+### Stubs (`NotImplementedError`, already registered)
+
+| Extension | Location |
+|-----------|----------|
+| `GarakAttackGenerator` | `adapters/generators/garak_generator.py` |
+| `OpenAITarget` / `AnthropicTarget` | `adapters/targets/` |
+| `HTTPTarget` | `adapters/targets/http_target.py` |
+| `LocalModelTarget` | `adapters/targets/local_model_target.py` |
+| `LangGraphTarget` | `adapters/targets/langgraph_target.py` |
+| `LLMJudgeEvaluator` | `adapters/evaluators/llm_judge_evaluator.py` |
+| `SQLiteStorage` | `adapters/storage/sqlite_storage.py` |
+| `MarkdownReporter` | `adapters/reporting/markdown_reporter.py` |
+| LLM-backed `Policy` | not started (rule-based only) |
+
+### How to add a new adapter (any port)
+
+```python
+# e.g. adapters/targets/my_target.py
+from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam_firewall.domain.ports import Target
+from llm_redteam_firewall.plugins import TARGETS
+
+@TARGETS.register("my_target")
+class MyTarget(Target):
+    name = "my_target"
+
+    def __init__(self, endpoint: str) -> None:
+        self._endpoint = endpoint
+
+    async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
+        ...
+```
+
+Then in YAML:
+
+```yaml
+target:
+  type: my_target
+  params:
+    endpoint: "https://my-service.internal/chat"
+```
+
+No changes to orchestrator, engines, or CLI.
+
+Out-of-tree packages can register via setuptools entry points:
+
+```toml
+[project.entry-points."llm_redteam_firewall.generators"]
+garak = "my_pkg.generator:GarakAttackGenerator"
+```
+
+### Natural future work
+
+| Idea | Where it would land |
+|------|---------------------|
+| Wire `PolicyEngine` into `CampaignOrchestrator` after execution | `application`, optional YAML keys in `config` |
+| Retry / backoff around target calls | `ExecutionEngine` |
+| Multi-turn attacks (`turns: list[str]`) | `Attack` model + every `Target` |
+| Import-boundary enforcement in CI | `import-linter` / similar |
+
+---
+
+## 11. Testing strategy
+
+Path: `tests/` (mirrors source packages)
+
+| Area | What is covered |
+|------|-----------------|
+| `tests/domain/` | Model immutability, helpers, invariants |
+| `tests/domain/ports/` | ABC contracts (cannot instantiate incomplete subclasses) |
+| `tests/application/` | Orchestrator + all three engines |
+| `tests/adapters/` | Functional adapters + policy rule positive/negative cases |
+| `tests/plugins/` | `Registry` + `PolicyRegistry` |
+| `tests/config/` | YAML load + DI wiring |
+| `conftest.py` | Imports `adapters` once so plugins are registered |
+
+Tooling:
+
+- `pytest` + `pytest-asyncio` (strict mode)
+- `ruff` (lint/format)
+- `mypy --strict`
+- `make check` → lint + typecheck + test
+
+---
+
+## 12. Runtime & packaging
+
+| Item | Detail |
+|------|--------|
+| Python | `>=3.12` |
+| Core deps | `pydantic`, `PyYAML` |
+| Optional extras | `openai`, `anthropic`, `http`, `langgraph` (for stub adapters) |
+| Install | `pip install -e ".[dev]"` or `make install-dev` |
+| Package layout | `src/` layout via setuptools |
+
+---
+
+## 13. Mental model (one paragraph)
+
+Define **what risks to probe** in a `Campaign`. Plugins decide **how to
+generate attacks**, **where to send them**, **how to grade outcomes**, and
+**how to store/report findings**. A separate **policy layer** applies standing
+firewall rules to any attack/response pair. The application layer always runs
+the same control flow; the composition root (`config.loader`) is the only place
+that chooses concrete classes by name from YAML or code.

@@ -18,6 +18,10 @@ Adding ``GarakAttackGenerator`` later means, in full::
             ...  # call into garak's probe library
 
 No change to ``application``, ``domain``, or the CLI is required.
+
+``POLICIES`` is a :class:`PolicyRegistry` (instance collection) rather
+than a factory :class:`Registry`, because the policy engine runs *all*
+registered rules against each attack/response pair.
 """
 
 from llm_redteam_firewall.domain.ports import (
@@ -28,6 +32,7 @@ from llm_redteam_firewall.domain.ports import (
     Target,
 )
 
+from .policy_registry import PolicyRegistry
 from .registry import Registry
 
 GENERATORS: Registry[AttackGenerator] = Registry("generators")
@@ -35,12 +40,15 @@ TARGETS: Registry[Target] = Registry("targets")
 EVALUATORS: Registry[Evaluator] = Registry("evaluators")
 STORAGE: Registry[FindingsStorage] = Registry("storage")
 REPORTERS: Registry[Reporter] = Registry("reporters")
+POLICIES: PolicyRegistry = PolicyRegistry()
 
 __all__ = [
     "Registry",
+    "PolicyRegistry",
     "GENERATORS",
     "TARGETS",
     "EVALUATORS",
     "STORAGE",
     "REPORTERS",
+    "POLICIES",
 ]

@@ -6,10 +6,10 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Any
 
 from .attack import Attack
 from .attack_result import AttackResult
-from .evaluation_result import EvaluationResult
 from .severity import Severity
 from .vulnerability import Vulnerability
 
@@ -33,19 +33,33 @@ class Finding:
     what the target returned, and how it was graded. This is the unit
     that :mod:`~llm_redteam_firewall.domain.ports.storage` persists and
     that :mod:`~llm_redteam_firewall.domain.ports.reporter` renders.
+
+    Findings are produced by two independent sources — an
+    :class:`~llm_redteam_firewall.domain.ports.evaluator.Evaluator`
+    grading a named vulnerability probe, or a
+    :class:`~llm_redteam_firewall.domain.ports.policy.Policy` flagging a
+    standing rule violation — so the verdict is carried here as plain
+    fields (``passed``/``reasoning``/``score``/``source``) rather than a
+    nested :class:`~llm_redteam_firewall.domain.models.evaluation_result.EvaluationResult`.
+    That keeps the two worlds decoupled: neither ``Policy`` nor
+    ``Finding`` needs to know that ``EvaluationResult`` exists.
     """
 
     vulnerability: Vulnerability
     attack: Attack
     attack_result: AttackResult
-    evaluation_result: EvaluationResult
     campaign_name: str
+    passed: bool
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     severity: Severity = Severity.MEDIUM
     status: FindingStatus = FindingStatus.OPEN
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    reasoning: str = ""
+    score: float = 0.0
+    source: str = "unknown"
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def is_vulnerable(self) -> bool:
-        """True when the attack defeated the target (evaluation failed)."""
-        return not self.evaluation_result.passed
+        """True when the attack defeated the target or violated a policy."""
+        return not self.passed

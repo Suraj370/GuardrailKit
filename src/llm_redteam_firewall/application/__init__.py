@@ -9,5 +9,11 @@ composition root, not by this layer.
 from .campaign_orchestrator import CampaignOrchestrator
 from .evaluation_engine import EvaluationEngine
 from .execution_engine import ExecutionEngine
+from .policy_engine import PolicyEngine
 
-__all__ = ["CampaignOrchestrator", "EvaluationEngine", "ExecutionEngine"]
+__all__ = [
+    "CampaignOrchestrator",
+    "EvaluationEngine",
+    "ExecutionEngine",
+    "PolicyEngine",
+]

@@ -69,9 +69,13 @@ class CampaignOrchestrator:
                     vulnerability=vulnerability,
                     attack=attack,
                     attack_result=attack_result,
-                    evaluation_result=evaluation_result,
                     campaign_name=campaign.name,
+                    passed=evaluation_result.passed,
                     severity=vulnerability.severity,
+                    reasoning=evaluation_result.reasoning,
+                    score=evaluation_result.score,
+                    source=evaluation_result.evaluator_name,
+                    metadata=dict(evaluation_result.metadata),
                 )
                 self._storage.save(finding)
                 findings.append(finding)

@@ -10,6 +10,16 @@ Core entities, matching the campaign execution flow:
 
     Campaign -> Vulnerability -> Attack -> AttackResult
              -> EvaluationResult -> Finding -> Report
+
+Policy evaluation uses a parallel, independent pair that never touches
+EvaluationResult:
+
+    Attack + Response -> Finding (via Policy)
+
+``Finding`` holds its verdict as plain fields (``passed`` / ``reasoning``
+/ ``score`` / ``source``) rather than embedding ``EvaluationResult`` —
+whichever of the two pipelines above produced a ``Finding``, the type
+itself carries no dependency on ``EvaluationResult``.
 """
 
 from .attack import Attack
@@ -19,6 +29,7 @@ from .evaluation_result import EvaluationResult
 from .execution_context import ExecutionContext
 from .finding import Finding, FindingStatus
 from .report import Report
+from .response import Response
 from .severity import Severity
 from .vulnerability import Vulnerability
 
@@ -31,6 +42,7 @@ __all__ = [
     "Finding",
     "FindingStatus",
     "Report",
+    "Response",
     "Severity",
     "Vulnerability",
 ]

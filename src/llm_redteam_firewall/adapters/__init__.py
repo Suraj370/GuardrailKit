@@ -1,7 +1,7 @@
 """Adapters: concrete implementations of the domain ports.
 
 This is the outer ring of the hexagon. Each subpackage here
-(``generators``, ``targets``, ``evaluators``, ``storage``,
+(``generators``, ``targets``, ``evaluators``, ``policies``, ``storage``,
 ``reporting``) implements exactly one port from
 :mod:`llm_redteam_firewall.domain.ports` and depends inward on
 ``domain`` plus, optionally, third-party SDKs specific to that
@@ -16,6 +16,13 @@ in-tree adapters as a side effect. The composition root
 before resolving any campaign configuration.
 """
 
-from . import evaluators, generators, reporting, storage, targets  # noqa: F401
+from . import evaluators, generators, policies, reporting, storage, targets  # noqa: F401
 
-__all__ = ["evaluators", "generators", "reporting", "storage", "targets"]
+__all__ = [
+    "evaluators",
+    "generators",
+    "policies",
+    "reporting",
+    "storage",
+    "targets",
+]

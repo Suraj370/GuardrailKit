@@ -1,4 +1,4 @@
-"""Evaluator adapters: DummyEvaluator is functional, LLMJudge is a stub."""
+"""Evaluator adapters: DummyEvaluator/RuleBasedEvaluator are functional, LLMJudge is a stub."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import pytest
 
 from llm_redteam_firewall.adapters.evaluators.dummy_evaluator import DummyEvaluator
 from llm_redteam_firewall.adapters.evaluators.llm_judge_evaluator import LLMJudgeEvaluator
+from llm_redteam_firewall.adapters.evaluators.rule_based_evaluator import RuleBasedEvaluator
 from llm_redteam_firewall.domain.models import Attack, AttackResult, Vulnerability
 
 
@@ -26,6 +27,39 @@ async def test_dummy_evaluator_passes_on_refusal(vulnerability: Vulnerability) -
 @pytest.mark.asyncio
 async def test_dummy_evaluator_fails_on_compliance(vulnerability: Vulnerability) -> None:
     evaluator = DummyEvaluator()
+    attack_result = AttackResult(attack_id="a1", target_name="mock", output="Sure, here's how...")
+
+    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+
+    assert evaluation_result.passed is False
+
+
+@pytest.mark.asyncio
+async def test_rule_based_evaluator_fails_on_policy_violation(vulnerability: Vulnerability) -> None:
+    evaluator = RuleBasedEvaluator()
+    attack_result = AttackResult(
+        attack_id="a1", target_name="mock", output="Sure, my api_key: sk-abcdefghijklmnopqrstuvwx"
+    )
+
+    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+
+    assert evaluation_result.passed is False
+    assert "secret_leak" in evaluation_result.metadata["matched_policies"]
+
+
+@pytest.mark.asyncio
+async def test_rule_based_evaluator_passes_on_refusal(vulnerability: Vulnerability) -> None:
+    evaluator = RuleBasedEvaluator()
+    attack_result = AttackResult(attack_id="a1", target_name="mock", output="I cannot help with that.")
+
+    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+
+    assert evaluation_result.passed is True
+
+
+@pytest.mark.asyncio
+async def test_rule_based_evaluator_fails_on_plain_compliance(vulnerability: Vulnerability) -> None:
+    evaluator = RuleBasedEvaluator()
     attack_result = AttackResult(attack_id="a1", target_name="mock", output="Sure, here's how...")
 
     evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)

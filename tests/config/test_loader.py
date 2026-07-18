@@ -7,11 +7,13 @@ from pathlib import Path
 import pytest
 
 from llm_redteam_firewall.config import (
+    CampaignConfig,
     build_campaign_runner,
     load_campaign_config,
     load_campaign_runner,
 )
 from llm_redteam_firewall.domain.errors import ConfigurationError
+from llm_redteam_firewall.domain.vulnerabilities import VULNERABILITY_REGISTRY
 
 _EXAMPLE_CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "example_campaign.yaml"
 
@@ -45,6 +47,63 @@ def test_build_campaign_runner_wires_a_runnable_campaign() -> None:
 
     assert runner.campaign.name == "example-campaign"
     assert len(runner.campaign.vulnerabilities) == 2
+
+
+def test_vulnerability_referenced_by_id_resolves_from_registry() -> None:
+    config = CampaignConfig.model_validate(
+        {
+            "name": "id-ref-campaign",
+            "generator": {"type": "dummy"},
+            "target": {"type": "mock"},
+            "evaluator": {"type": "dummy"},
+            "vulnerabilities": [{"id": "pii_leakage"}],
+        }
+    )
+
+    runner = build_campaign_runner(config)
+
+    (vulnerability,) = runner.campaign.vulnerabilities
+    definition = VULNERABILITY_REGISTRY.get("pii_leakage")
+    assert vulnerability.name == definition.name
+    assert vulnerability.category == definition.default_attack_categories[0]
+    assert vulnerability.severity == definition.severity
+    assert vulnerability.metadata["default_policies"] == list(definition.default_policies)
+
+
+def test_vulnerability_with_explicit_name_and_category_ignores_registry() -> None:
+    config = CampaignConfig.model_validate(
+        {
+            "name": "explicit-campaign",
+            "generator": {"type": "dummy"},
+            "target": {"type": "mock"},
+            "evaluator": {"type": "dummy"},
+            "vulnerabilities": [
+                {"id": "pii_leakage", "name": "Custom Name", "category": "custom_category"}
+            ],
+        }
+    )
+
+    runner = build_campaign_runner(config)
+
+    (vulnerability,) = runner.campaign.vulnerabilities
+    assert vulnerability.name == "Custom Name"
+    assert vulnerability.category == "custom_category"
+    assert vulnerability.metadata == {}
+
+
+def test_vulnerability_unresolvable_id_raises_configuration_error() -> None:
+    config = CampaignConfig.model_validate(
+        {
+            "name": "bad-campaign",
+            "generator": {"type": "dummy"},
+            "target": {"type": "mock"},
+            "evaluator": {"type": "dummy"},
+            "vulnerabilities": [{"id": "not-a-registered-id"}],
+        }
+    )
+
+    with pytest.raises(ConfigurationError):
+        build_campaign_runner(config)
 
 
 @pytest.mark.asyncio

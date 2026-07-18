@@ -31,15 +31,26 @@ class PluginSpec(BaseModel):
 
 class VulnerabilityConfig(BaseModel):
     """Config-file representation of a
-    :class:`~llm_redteam_firewall.domain.models.vulnerability.Vulnerability`."""
+    :class:`~llm_redteam_firewall.domain.models.vulnerability.Vulnerability`.
+
+    ``name``/``category`` may be omitted when ``id`` matches a
+    :class:`~llm_redteam_firewall.domain.vulnerabilities.VulnerabilityDefinition`
+    registered in
+    :data:`~llm_redteam_firewall.domain.vulnerabilities.VULNERABILITY_REGISTRY`
+    — the loader then fills them in from that definition, so a campaign
+    can reference a well-known vulnerability by id alone instead of
+    restating its implementation details inline. Providing both fields
+    explicitly (the original, still-supported form) always takes
+    precedence over the registry.
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     id: str
-    name: str
-    category: str
-    description: str = ""
-    severity: Severity = Severity.MEDIUM
+    name: str | None = None
+    category: str | None = None
+    description: str | None = None
+    severity: Severity | None = None
     metadata: dict[str, object] = Field(default_factory=dict)
 
 

@@ -7,6 +7,7 @@ Importing this package registers all in-tree evaluators with
 from . import (  # noqa: F401  (import for registration side effect)
     dummy_evaluator,
     llm_judge_evaluator,
+    rule_based_evaluator,
 )
 
-__all__ = ["dummy_evaluator", "llm_judge_evaluator"]
+__all__ = ["dummy_evaluator", "llm_judge_evaluator", "rule_based_evaluator"]

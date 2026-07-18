@@ -11,7 +11,6 @@ import pytest
 from llm_redteam_firewall.domain.models import (
     Attack,
     AttackResult,
-    EvaluationResult,
     Finding,
     FindingStatus,
     Severity,
@@ -22,13 +21,12 @@ from llm_redteam_firewall.domain.models import (
 def _finding(*, passed: bool, vulnerability: Vulnerability) -> Finding:
     attack = Attack(id="a1", vulnerability_id=vulnerability.id, prompt="p")
     attack_result = AttackResult(attack_id="a1", target_name="mock", output="sure")
-    evaluation_result = EvaluationResult(attack_id="a1", passed=passed)
     return Finding(
         vulnerability=vulnerability,
         attack=attack,
         attack_result=attack_result,
-        evaluation_result=evaluation_result,
         campaign_name="c1",
+        passed=passed,
     )
 
 

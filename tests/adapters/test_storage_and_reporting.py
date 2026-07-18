@@ -6,12 +6,12 @@ import json
 from datetime import UTC, datetime
 
 from llm_redteam_firewall.adapters.reporting.console_reporter import ConsoleReporter
+from llm_redteam_firewall.adapters.reporting.html_reporter import HTMLReporter
 from llm_redteam_firewall.adapters.reporting.json_reporter import JSONReporter
 from llm_redteam_firewall.adapters.storage.in_memory_storage import InMemoryStorage
 from llm_redteam_firewall.domain.models import (
     Attack,
     AttackResult,
-    EvaluationResult,
     Finding,
     Report,
     Vulnerability,
@@ -21,13 +21,12 @@ from llm_redteam_firewall.domain.models import (
 def _finding(vulnerability: Vulnerability, campaign_name: str) -> Finding:
     attack = Attack(id="a1", vulnerability_id=vulnerability.id, prompt="p")
     attack_result = AttackResult(attack_id="a1", target_name="mock", output="sure")
-    evaluation_result = EvaluationResult(attack_id="a1", passed=False)
     return Finding(
         vulnerability=vulnerability,
         attack=attack,
         attack_result=attack_result,
-        evaluation_result=evaluation_result,
         campaign_name=campaign_name,
+        passed=False,
     )
 
 
@@ -65,4 +64,16 @@ def test_json_reporter_writes_valid_json(tmp_path, vulnerability: Vulnerability)
     data = json.loads(output_path.read_text(encoding="utf-8"))
     assert data["campaign_name"] == "c1"
     assert len(data["findings"]) == 1
-    assert data["findings"][0]["evaluation_result"]["passed"] is False
+    assert data["findings"][0]["passed"] is False
+
+
+def test_html_reporter_writes_page_with_findings(tmp_path, vulnerability: Vulnerability) -> None:
+    output_path = tmp_path / "report.html"
+    report = _report(vulnerability)
+
+    HTMLReporter(output_path=str(output_path)).report(report)
+
+    html = output_path.read_text(encoding="utf-8")
+    assert "<html" in html
+    assert vulnerability.name in html
+    assert "vulnerable" in html

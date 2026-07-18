@@ -2,11 +2,12 @@
 
 A pluggable, hexagonal-architecture LLM red-team harness that  runs security-style attack campaigns against LLM apps, grades the responses, stores findings, and reports them.
 > **Status:** scaffold. Interfaces, domain models, plugin registry, wiring,
-> and reference (dummy/mock) implementations are in place and tested.
-> Real integrations (OpenAI, Anthropic, HTTP, local models, LangGraph
-> agents, Garak, an LLM-judge evaluator) are intentionally left as
-> `NotImplementedError` stubs — see `ARCHITECTURE.md` → *Future extension
-> points*.
+> and reference (dummy/mock) implementations are in place and tested. The
+> Garak-backed `AttackGenerator` is a real integration (requires the
+> `garak` extra) — see `ARCHITECTURE.md` § 8.1a. Other real integrations
+> (OpenAI, Anthropic, HTTP, local models, LangGraph agents, an LLM-judge
+> evaluator) are intentionally left as `NotImplementedError` stubs — see
+> `ARCHITECTURE.md` → *Future extension points*.
 
 ## Why this exists
 
@@ -58,7 +59,7 @@ adapters: `DummyAttackGenerator`, `MockTarget`, `DummyEvaluator`,
 | `domain.campaigns`                | `AttackCampaign`/`AttackBatch` planning layer between `AttackGenerator` output and `ExecutionEngine` (declared, not-yet-enforced execution strategy/retry/concurrency) | `domain.models` |
 | `application`                     | Use cases: `CampaignOrchestrator`, `ExecutionEngine`, `EvaluationEngine`, `PolicyEngine` | `domain` |
 | `application.policy_engine`       | `PolicyEngine`: runs every registered `Policy` over an attack/response pair, aggregating multi-rule findings (symmetric to `EvaluationEngine`, but many-to-one) | `domain` |
-| `adapters.generators`             | `AttackGenerator` implementations (`dummy`, `garak` stub)                       | `domain`, `plugins` |
+| `adapters.generators`             | `AttackGenerator` implementations: `dummy`, plus `garak` (subpackage, reads Garak's probe corpus; requires the `garak` extra) | `domain`, `plugins`, `garak` lazily |
 | `adapters.targets`                | `Target` implementations (`mock`, `callback`, `openai`/`anthropic`/`http`/`local_model`/`langgraph` stubs) | `domain`, `plugins` |
 | `adapters.evaluators`             | `Evaluator` implementations (`dummy`, `rule_based`, `llm_judge` stub)            | `domain`, `plugins` |
 | `adapters.policies`               | Rule-based `Policy` implementations (`prompt_leak`, `pii_leak`, `secret_leak`, `tool_misuse`) | `domain`, `plugins` |

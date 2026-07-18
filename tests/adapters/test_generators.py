@@ -1,11 +1,13 @@
-"""Generator adapters: DummyAttackGenerator is functional, Garak is a stub."""
+"""Generator adapters: DummyAttackGenerator is functional.
+
+The Garak-backed generator has its own test suite under
+``tests/adapters/generators/garak/`` (it needs mocked Garak
+objects, unlike this simple dependency-free generator).
+"""
 
 from __future__ import annotations
 
-import pytest
-
 from llm_redteam_firewall.adapters.generators.dummy_generator import DummyAttackGenerator
-from llm_redteam_firewall.adapters.generators.garak_generator import GarakAttackGenerator
 from llm_redteam_firewall.domain.models import Vulnerability
 from llm_redteam_firewall.plugins import GENERATORS
 
@@ -22,9 +24,3 @@ def test_dummy_generator_respects_max_attacks(vulnerability: Vulnerability) -> N
 
 def test_dummy_generator_is_registered_by_name() -> None:
     assert GENERATORS.get("dummy") is DummyAttackGenerator
-
-
-def test_garak_generator_is_registered_but_not_implemented(vulnerability: Vulnerability) -> None:
-    assert GENERATORS.get("garak") is GarakAttackGenerator
-    with pytest.raises(NotImplementedError):
-        GarakAttackGenerator().generate(vulnerability, max_attacks=1)

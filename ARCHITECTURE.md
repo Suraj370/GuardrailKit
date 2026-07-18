@@ -86,6 +86,7 @@ llm-redteam-firewall/
 │       ├── application/           # use cases — depends only on domain
 │       ├── adapters/              # concrete port implementations
 │       │   ├── generators/
+│       │   │   └── garak/         # multi-module Garak AttackGenerator adapter
 │       │   ├── targets/
 │       │   ├── evaluators/
 │       │   ├── policies/
@@ -405,8 +406,127 @@ as a side effect (used by config loader, CLI, tests, examples).
 
 | Name | Status | Notes |
 |------|--------|-------|
-| `dummy` | **Functional** | Template prompts from vulnerability description |
-| `garak` | Stub | Placeholder for Garak probe integration |
+| `dummy` | **Functional** | Template prompts from vulnerability description (`adapters/generators/dummy_generator.py`) |
+| `garak` | **Functional** (requires `garak` extra) | Reads Garak's probe corpus (`adapters/generators/garak/`) — see §8.1a |
+
+Both register into the same `GENERATORS` factory registry (§7.1); `generator: {type: garak}` in
+YAML needs no other change anywhere in the framework. `garak` is a subpackage
+(`adapters/generators/garak/`, multiple collaborator modules) sitting alongside the single-file
+`dummy_generator.py` in the same `adapters.generators` package — Python allows mixing single-file
+and multi-file adapters in one package directory, and the registry, config schema, and every
+consumer of `AttackGenerator` are unaware of the difference either way.
+
+### 8.1a Garak integration (`adapters.generators.garak`)
+
+**What this integration does, precisely:** `GarakAttackGenerator` reads prompts out of Garak's
+probe corpus and converts them into this framework's `Attack` objects. It never calls Garak's
+`Probe.probe(generator)` — verified against Garak's source, that method both mints Garak
+`Attempt`s *and executes them* against whatever `garak.generators.base.Generator` is passed in,
+i.e. it is Garak's own execution stage. Calling it would mean asking Garak to run attacks against
+a Garak-specific model wrapper, duplicating and conflicting with this framework's own
+`ExecutionEngine`. Instead, each selected probe is only *instantiated* (which runs its `__init__`
+— where Garak populates `self.prompts`, before `probe()` is ever called) and its `.prompts` list
+is read directly. Garak's `Generator`, `Harness`, and `Detector` types are never touched by this
+framework; grading stays entirely `EvaluationEngine`/`PolicyEngine`'s job, as for every other
+generator.
+
+Module layout (`src/llm_redteam_firewall/adapters/generators/garak/`):
+
+| File | Responsibility |
+|------|-----------------|
+| `models.py` | `GarakProbeInfo` (probe metadata, read without instantiating), `ProbeMappingRule` |
+| `probe_registry.py` | `ProbeRegistry`: discovers probes via `garak._plugins.enumerate_plugins("probes")` (no hardcoded probe list); reads class-level metadata (`tags`/`goal`/`primary_detector`/...) via `getattr` on the imported class, without instantiating; `load_probe_instance()` is the one place a probe actually gets constructed |
+| `probe_selector.py` | `ProbeSelector` + `DEFAULT_PROBE_MAPPING`: resolves a vulnerability id into a filtered, deterministically-sorted probe list |
+| `mapper.py` | `garak_prompts_to_attacks()`: converts one probe's raw `.prompts` entries into `Attack` objects |
+| `generator.py` | `GarakAttackGenerator` (the only `@GENERATORS.register` in this package) |
+
+**Only this package imports `garak`, and even here the import is lazy** (inside
+`ProbeRegistry`'s methods, never at module scope) — so
+`import llm_redteam_firewall.adapters` (done eagerly by the config loader, the CLI, and every
+test's `conftest.py`) never fails just because Garak isn't installed. Only actually calling
+`GarakAttackGenerator.generate()` (or `ProbeRegistry`'s methods directly) without Garak installed
+raises a clear `GarakNotInstalledError` (a `ConfigurationError` subclass) naming the `garak` extra.
+
+**Supported probe shapes:** any Garak probe whose `.prompts` entries are plain `str` or
+`garak.attempt.Message` (has a `.text` attribute) — this covers the large majority of Garak's
+probe corpus (`dan`, `promptinject`, `encoding`, `apikey`, `malwaregen`, ...).
+
+**Unsupported probe shapes:** probes whose `.prompts` entries are `garak.attempt.Conversation`
+objects (multi-turn) are not representable by this framework's single-turn `Attack.prompt: str`
+field — `mapper.py` skips any entry it cannot extract plain text from, rather than guessing.
+Probe modules that themselves fail to import (e.g. requiring Garak's own optional extras — audio
+or image processing deps not installed even though the base `garak` package is) are skipped
+during discovery with a warning, rather than aborting `list_probes()` entirely.
+
+**Probe mapping (configurable, not hardcoded):** `ProbeSelector` resolves a vulnerability id
+(matching this framework's `VulnerabilityDefinition.id`, §5.0) into Garak probes via a
+`dict[str, ProbeMappingRule]`, where each rule is `include_patterns` (glob, matched against
+`module.ClassName`; a bare module name like `"dan"` is shorthand for `"dan.*"`), `include_tags`,
+and `exclude_tags`. `DEFAULT_PROBE_MAPPING` (in `probe_selector.py`) is a best-effort starting
+point built from real Garak module names verified against Garak's source at integration time —
+**not** an authoritative mapping published by Garak itself (no such canonical mapping exists):
+
+| Vulnerability id | Default probe pattern(s) | Confidence |
+|---|---|---|
+| `prompt_injection` | `promptinject.*`, `latentinjection.*` | direct match |
+| `jailbreak` | `dan.*`, `encoding.*`, `suffix.*`, `grandma.*`, `dra.*` | direct match |
+| `prompt_leakage` | `leakreplay.*`, `sysprompt_extraction.*`, `divergence.*` | direct match |
+| `pii_leakage` | `leakreplay.*`, `donotanswer.*` | **approximate** — no dedicated Garak PII module exists |
+| `secret_leakage` | `apikey.*` | direct match |
+| `tool_misuse` | `exploitation.*`, `packagehallucination.*` | **approximate** — no dedicated Garak "excessive agency" module exists |
+
+Override or extend this entirely from YAML via the `probe_mapping` param (see the config example
+below) — nothing here is baked into `if vulnerability.id == ...:` branching logic.
+
+**Extension points:**
+
+- Add/replace mapping rules per-deployment via `generator.params.probe_mapping`, no code change.
+- `ProbeRegistry`/`ProbeSelector` are plain constructor-injectable collaborators — a project could
+  swap in a different `ProbeRegistry` (e.g. one backed by a curated allowlist) without touching
+  `GarakAttackGenerator`.
+- A future `garak_detector`-backed `Evaluator` could read the `primary_detector`/
+  `extended_detectors` metadata this integration already preserves on every `Attack.metadata` —
+  not implemented here (out of scope; this integration only touches Garak's probe corpus).
+
+**Known Garak limitations affecting this integration** (none are workarounds attempted here —
+each is a documented, deliberate scope boundary):
+
+1. **Multi-turn probes are dropped.** Garak's `Conversation`-shaped prompts have no equivalent in
+   this framework's single-turn `Attack` model; `mapper.py` silently skips them per-entry (a probe
+   with a mix of `str`/`Message` and `Conversation` entries still yields the extractable ones).
+2. **No canonical vulnerability -> probe mapping exists in Garak.** `DEFAULT_PROBE_MAPPING` is
+   this integration's own best-effort curation, verified against real module names, not sourced
+   from Garak documentation — two of six built-in vulnerability ids (`pii_leakage`, `tool_misuse`)
+   have no exact Garak module match.
+3. **Some probes require Garak's own optional extras.** Audio/image-based probe modules
+   (`audio.py`, `visual_jailbreak.py`, ...) fail to import unless those extras are installed on
+   top of the base `garak` package; `ProbeRegistry` skips them rather than failing discovery.
+4. **Probe metadata dict shape (`garak._plugins.PluginCache.plugin_info()`) was not fully
+   verifiable without a live install.** `ProbeRegistry` deliberately avoids depending on it and
+   instead reads class-level attributes directly via `getattr` on the imported probe class — a
+   choice made because those attributes' existence and shape were verified directly against
+   Garak's `probes/base.py` source, unlike `plugin_info()`'s exact return schema.
+5. **`Probe.__init__` cost varies per probe.** Some probes load large bundled datasets in
+   `__init__` (this is where `.prompts` gets populated) — `ProbeRegistry.load_probe_instance()` is
+   therefore only called for probes `ProbeSelector` actually selected, never during metadata
+   browsing/filtering.
+
+**Example configuration** (uses this framework's existing, unmodified `generator.params` YAML
+shape — §9.1 — rather than `attack_generator:`/`config:` key names sometimes seen in illustrative
+examples elsewhere; `config/schema.py` is not touched by this integration):
+
+```yaml
+generator:
+  type: garak
+  params:
+    vulnerabilities: [prompt_injection, jailbreak]
+    include_tags: [owasp:llm01]
+    exclude_tags: [deprecated]
+    max_attacks: 100
+    probe_mapping:              # optional: overrides DEFAULT_PROBE_MAPPING
+      jailbreak:
+        include_patterns: [dan.*, encoding.*]
+```
 
 ### 8.2 Targets (`adapters.targets`)
 
@@ -565,8 +685,8 @@ sequenceDiagram
 ### Functional today (no external services)
 
 - Pipeline: generate → execute → evaluate → store → report  
-- Adapters: `dummy` generator, `mock`/`callback` targets, `dummy`/`rule_based`
-  evaluators, `in_memory` storage, `console`/`json`/`html` reporters  
+- Adapters: `dummy`/`garak` generators (`garak` requires the `garak` extra — §8.1a), `mock`/`callback`
+  targets, `dummy`/`rule_based` evaluators, `in_memory` storage, `console`/`json`/`html` reporters  
 - Policies: all four rule-based policies + `PolicyEngine`  
 - CLI + YAML config + example script  
 
@@ -574,7 +694,6 @@ sequenceDiagram
 
 | Extension | Location |
 |-----------|----------|
-| `GarakAttackGenerator` | `adapters/generators/garak_generator.py` |
 | `OpenAITarget` / `AnthropicTarget` | `adapters/targets/` |
 | `HTTPTarget` | `adapters/targets/http_target.py` |
 | `LocalModelTarget` | `adapters/targets/local_model_target.py` |
@@ -618,8 +737,11 @@ Out-of-tree packages can register via setuptools entry points:
 
 ```toml
 [project.entry-points."llm_redteam_firewall.generators"]
-garak = "my_pkg.generator:GarakAttackGenerator"
+custom_fuzzer = "my_pkg.generator:CustomFuzzingGenerator"
 ```
+
+(`garak` itself is now an in-tree adapter — §8.1a — registered the ordinary way via
+`@GENERATORS.register("garak")`, not via entry points.)
 
 ### Natural future work
 

@@ -37,6 +37,10 @@ openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.30"]
 http = ["httpx>=0.27"]
 langgraph = ["langgraph>=0.2"]
+# Unlike the extras above, `garak` backs a fully implemented adapter
+# (adapters/attack_generators/garak/) -- this extra is only about the
+# third-party dependency, not scaffold status.
+garak = ["garak>=0.13"]
 
 [project.scripts]
 llm-redteam-firewall = "llm_redteam_firewall.cli.main:main"

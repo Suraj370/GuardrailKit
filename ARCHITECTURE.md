@@ -179,6 +179,33 @@ Path: `src/llm_redteam_firewall/domain/`
 The domain is framework-free: plain dataclasses, enums, ABCs/Protocols, and
 a small exception hierarchy. No Pydantic, no YAML, no HTTP clients.
 
+### 5.0a Attack planning (`domain.campaigns`)
+
+A planning layer between `Campaign`/`AttackGenerator` and `ExecutionEngine`:
+
+```
+Campaign -> AttackGenerator -> list[Attack] -> AttackCampaign (batches of AttackBatch) -> ExecutionEngine
+```
+
+- `AttackBatch` — one or more `Attack`s plus declared (not yet enforced)
+  `execution_strategy` (`sequential`/`parallel`), `retry_policy`,
+  `timeout_seconds`, `max_concurrency`, and `metadata`.
+- `AttackCampaign` — an ordered tuple of `AttackBatch`, campaign-level
+  `execution_strategy` and `metadata`, and an `attacks` property that
+  flattens every batch back into a single `tuple[Attack, ...]` in order.
+  `AttackCampaign.from_attacks(name, attacks)` wraps a flat attack list
+  (what `AttackGenerator.generate()` already returns) into a single
+  batch — this is the compatibility path `CampaignOrchestrator` uses.
+
+`CampaignOrchestrator` wraps each vulnerability's generated attacks in
+an `AttackCampaign` and iterates its batches rather than the raw list
+directly, but since `from_attacks` always produces exactly one batch
+containing every attack in original order, `ExecutionEngine`/
+`EvaluationEngine` still receive the identical flat sequence they
+always did — no behavior change, only the added abstraction. No
+scheduler, retry loop, or concurrency limiter reads
+`execution_strategy`/`retry_policy`/`max_concurrency` yet.
+
 ### 5.0 Vulnerability catalog (`domain.vulnerabilities`)
 
 A separate subpackage, not a `domain.models` entity: `VulnerabilityDefinition`

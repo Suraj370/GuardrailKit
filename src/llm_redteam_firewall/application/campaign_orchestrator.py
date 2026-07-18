@@ -14,6 +14,7 @@ import logging
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
+from llm_redteam_firewall.domain.campaigns import AttackCampaign
 from llm_redteam_firewall.domain.models import Campaign, Finding, Report
 from llm_redteam_firewall.domain.ports import AttackGenerator, FindingsStorage, Reporter
 
@@ -52,33 +53,45 @@ class CampaignOrchestrator:
 
         for vulnerability in campaign.vulnerabilities:
             logger.info("generating attacks for vulnerability=%s", vulnerability.id)
-            attacks = self._generator.generate(
+            generated_attacks = self._generator.generate(
                 vulnerability, campaign.max_attacks_per_vulnerability
             )
-            if not attacks:
+            if not generated_attacks:
                 logger.warning("generator produced no attacks for vulnerability=%s", vulnerability.id)
                 continue
 
-            attack_results = await self._execution_engine.run(campaign.name, attacks)
-            evaluation_results = await self._evaluation_engine.run(vulnerability, attacks, attack_results)
+            # Wrap the generator's flat output in an AttackCampaign so the
+            # orchestrator iterates the planning layer rather than the raw
+            # list directly. from_attacks() puts every attack in a single
+            # AttackBatch, so this loop runs once per vulnerability with the
+            # exact same attacks, in the exact same order, as before —
+            # no behavior change, only the intermediate abstraction.
+            attack_campaign = AttackCampaign.from_attacks(campaign.name, generated_attacks)
 
-            for attack, attack_result, evaluation_result in zip(
-                attacks, attack_results, evaluation_results, strict=True
-            ):
-                finding = Finding(
-                    vulnerability=vulnerability,
-                    attack=attack,
-                    attack_result=attack_result,
-                    campaign_name=campaign.name,
-                    passed=evaluation_result.passed,
-                    severity=vulnerability.severity,
-                    reasoning=evaluation_result.reasoning,
-                    score=evaluation_result.score,
-                    source=evaluation_result.evaluator_name,
-                    metadata=dict(evaluation_result.metadata),
+            for batch in attack_campaign:
+                batch_attacks = batch.attacks
+                attack_results = await self._execution_engine.run(campaign.name, batch_attacks)
+                evaluation_results = await self._evaluation_engine.run(
+                    vulnerability, batch_attacks, attack_results
                 )
-                self._storage.save(finding)
-                findings.append(finding)
+
+                for attack, attack_result, evaluation_result in zip(
+                    batch_attacks, attack_results, evaluation_results, strict=True
+                ):
+                    finding = Finding(
+                        vulnerability=vulnerability,
+                        attack=attack,
+                        attack_result=attack_result,
+                        campaign_name=campaign.name,
+                        passed=evaluation_result.passed,
+                        severity=vulnerability.severity,
+                        reasoning=evaluation_result.reasoning,
+                        score=evaluation_result.score,
+                        source=evaluation_result.evaluator_name,
+                        metadata=dict(evaluation_result.metadata),
+                    )
+                    self._storage.save(finding)
+                    findings.append(finding)
 
         report = Report(
             campaign_name=campaign.name,

@@ -55,6 +55,7 @@ adapters: `DummyAttackGenerator`, `MockTarget`, `DummyEvaluator`,
 | `domain.ports`                    | Interfaces (`ABC`/`Protocol`): `AttackGenerator`, `Target`, `Evaluator`, `Policy`, `FindingsStorage`, `Reporter` | `domain.models` |
 | `domain.errors`                   | Shared exception hierarchy                                                     | *(nothing)* |
 | `domain.vulnerabilities`          | `VulnerabilityDefinition` catalog + `VulnerabilityRegistry` (`VULNERABILITY_REGISTRY`), `to_vulnerability(...)` — lets a campaign reference a vulnerability by id instead of inlining its generator/categories/policies | `domain.models`, `domain.errors` |
+| `domain.campaigns`                | `AttackCampaign`/`AttackBatch` planning layer between `AttackGenerator` output and `ExecutionEngine` (declared, not-yet-enforced execution strategy/retry/concurrency) | `domain.models` |
 | `application`                     | Use cases: `CampaignOrchestrator`, `ExecutionEngine`, `EvaluationEngine`, `PolicyEngine` | `domain` |
 | `application.policy_engine`       | `PolicyEngine`: runs every registered `Policy` over an attack/response pair, aggregating multi-rule findings (symmetric to `EvaluationEngine`, but many-to-one) | `domain` |
 | `adapters.generators`             | `AttackGenerator` implementations (`dummy`, `garak` stub)                       | `domain`, `plugins` |

@@ -76,4 +76,5 @@ def test_html_reporter_writes_page_with_findings(tmp_path, vulnerability: Vulner
     html = output_path.read_text(encoding="utf-8")
     assert "<html" in html
     assert vulnerability.name in html
-    assert "vulnerable" in html
+    assert "Executive Summary" in html
+    assert "Failed" in html or "finding-card" in html

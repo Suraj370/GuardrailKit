@@ -1,0 +1,44 @@
+# Runs the real Garak-backed attack generator (requires the `garak` extra
+# installed: pip install 'llm-redteam-firewall[garak]') against the
+# zero-configuration MockTarget, and renders the result as a standalone
+# HTML report:
+#
+#   llm-redteam-firewall run --config configs/garak_html_demo.yaml
+#
+# Swap `target:` to a real target (openai/anthropic/http/...) to probe an
+# actual system under test instead of the mock.
+
+name: garak-html-demo
+description: Real Garak probe corpus against the mock target, reported as HTML.
+
+generator:
+  type: garak
+
+target:
+  type: mock
+  params:
+    canned_response: "I cannot help with that request."
+
+evaluator:
+  type: rule_based
+
+storage:
+  type: in_memory
+
+reporters:
+  - type: console
+  - type: html
+    params:
+      output_path: build/garak-html-report.html
+
+max_attacks_per_vulnerability: 15
+concurrency: 5
+timeout_seconds: 30
+
+vulnerabilities:
+  - id: prompt_injection
+  - id: jailbreak
+  - id: prompt_leakage
+  - id: pii_leakage
+  - id: secret_leakage
+  - id: tool_misuse

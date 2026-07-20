@@ -1,26 +1,31 @@
 # Runs the real Garak-backed attack generator (requires the `garak` extra
-# installed: pip install 'llm-redteam-firewall[garak]') against the
-# zero-configuration MockTarget, and renders the result as a standalone
-# HTML report:
+# installed: pip install 'llm-redteam-firewall[garak]') against a real
+# OpenAI model (requires the `openai` extra: pip install
+# 'llm-redteam-firewall[openai]', plus OPENAI_API_KEY set in the
+# environment or in a .env file in the working directory — the CLI
+# loads it automatically via python-dotenv), and renders the result as
+# a standalone HTML report:
 #
 #   llm-redteam-firewall run --config configs/garak_html_demo.yaml
 #
-# Swap `target:` to a real target (openai/anthropic/http/...) to probe an
-# actual system under test instead of the mock.
+# Swap `target:` to point at a different model, or back to `type: mock`
+# for a zero-dependency, zero-cost pipeline smoke test.
 
 name: garak-html-demo
-description: Real Garak probe corpus against the mock target, reported as HTML.
+description: Real Garak probe corpus against gpt-5.4-nano, reported as HTML.
 
 generator:
   type: garak
 
 target:
-  type: mock
+  type: openai
   params:
-    canned_response: "I cannot help with that request."
+    model: gpt-5.4-nano
 
 evaluator:
-  type: rule_based
+  type: judge_and_rules
+  params:
+    judge_model: gpt-5.4-nano
 
 storage:
   type: in_memory

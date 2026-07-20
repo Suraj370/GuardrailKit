@@ -1,10 +1,11 @@
 """Target implementations.
 
 Importing this package registers all in-tree targets with
-:data:`llm_redteam_firewall.plugins.TARGETS`. Of these, only
-:class:`.mock_target.MockTarget` and :class:`.callback_target.CallbackTarget`
-are functional out of the box — the rest (openai, anthropic, http,
-local_model, langgraph) are extension-point stubs that raise
+:data:`llm_redteam_firewall.plugins.TARGETS`. Of these,
+:class:`.mock_target.MockTarget`, :class:`.callback_target.CallbackTarget`,
+and :class:`.openai_target.OpenAITarget` are functional out of the box
+(``OpenAITarget`` requires the ``openai`` extra) — the rest (anthropic,
+http, local_model, langgraph) are extension-point stubs that raise
 ``NotImplementedError``.
 """
 

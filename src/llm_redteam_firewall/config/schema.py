@@ -75,3 +75,5 @@ class CampaignConfig(BaseModel):
     max_attacks_per_vulnerability: int = 5
     concurrency: int = 5
     timeout_seconds: float = 30.0
+    max_retries: int = 2
+    retry_backoff_seconds: float = 1.0

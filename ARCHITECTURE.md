@@ -534,7 +534,7 @@ generator:
 |------|--------|-------|
 | `mock` | **Functional** | Canned response; no network |
 | `callback` | **Functional** | User-supplied Python callable |
-| `openai` | Stub | Optional extra: `openai` |
+| `openai` | **Functional** | Optional extra: `openai`; calls the Responses API |
 | `anthropic` | Stub | Optional extra: `anthropic` |
 | `http` | Stub | Optional extra: `httpx` |
 | `local_model` | Stub | Local transformers / vLLM / llama.cpp |
@@ -546,7 +546,7 @@ generator:
 |------|--------|-------|
 | `dummy` | **Functional** | Refusal-keyword match grader |
 | `rule_based` | **Functional** | Runs every registered `Policy` (§8.4) against the pair; falls back to refusal-keyword match if none fire |
-| `llm_judge` | Stub | Future LLM-as-judge |
+| `llm_judge` | **Functional** | LLM-as-judge (OpenAI Responses API); optional extra: `openai` |
 
 ### 8.4 Policies (`adapters.policies`)
 

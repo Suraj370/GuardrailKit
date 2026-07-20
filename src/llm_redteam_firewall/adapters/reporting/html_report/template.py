@@ -70,6 +70,7 @@ def _render_executive_summary(data: PreparedReport) -> str:
       <div class="summary-item"><div class="label">Total findings</div><div class="value">{s.total_findings}</div></div>
       <div class="summary-item"><div class="label">Blocked</div><div class="value">{s.passed}</div></div>
       <div class="summary-item"><div class="label">Compromised</div><div class="value">{s.failed}</div></div>
+      <div class="summary-item"><div class="label">Errored</div><div class="value">{s.errored}</div></div>
       <div class="summary-item"><div class="label">Success rate</div><div class="value">{_pct(s.success_rate)}</div></div>
     </div>
     <div class="summary-grid">
@@ -124,8 +125,8 @@ def _render_charts() -> str:
       <canvas id="chart-findings-vuln" aria-label="Findings by vulnerability chart" role="img"></canvas>
     </div>
     <div class="chart-card">
-      <h3>Blocked vs Compromised</h3>
-      <canvas id="chart-pass-fail" aria-label="Blocked versus compromised chart" role="img"></canvas>
+      <h3>Outcome breakdown</h3>
+      <canvas id="chart-pass-fail" aria-label="Blocked versus compromised versus errored chart" role="img"></canvas>
     </div>
     <div class="chart-card">
       <h3>Attacks per vulnerability</h3>
@@ -144,6 +145,7 @@ def _render_vulnerability_row(row: VulnerabilityBreakdownRow) -> str:
         f"<td>{row.attacks}</td>"
         f"<td>{row.passed}</td>"
         f"<td>{row.failed}</td>"
+        f"<td>{row.errored}</td>"
         f"<td>{_pct(row.success_rate)}</td>"
         f"<td>{avg}</td>"
         "</tr>"
@@ -152,7 +154,7 @@ def _render_vulnerability_row(row: VulnerabilityBreakdownRow) -> str:
 
 def _render_vulnerabilities(data: PreparedReport) -> str:
     if not data.vulnerability_breakdown:
-        body = '<tr><td colspan="6">No vulnerabilities tested.</td></tr>'
+        body = '<tr><td colspan="7">No vulnerabilities tested.</td></tr>'
     else:
         body = "\n".join(_render_vulnerability_row(r) for r in data.vulnerability_breakdown)
     return f"""
@@ -166,6 +168,7 @@ def _render_vulnerabilities(data: PreparedReport) -> str:
           <th>Number of attacks</th>
           <th>Blocked</th>
           <th>Compromised</th>
+          <th>Errored</th>
           <th>Success rate</th>
           <th>Average score</th>
         </tr>
@@ -216,7 +219,7 @@ def _detail(title: str, content: str, open_by_default: bool = False) -> str:
 
 
 def _render_finding_card(finding: FindingView) -> str:
-    result_badge = "badge-blocked" if finding.passed else "badge-compromised"
+    result_badge = f"badge-{finding.status_label.lower()}"
     search_blob = " ".join(
         [
             finding.id,
@@ -262,6 +265,7 @@ def _render_finding_card(finding: FindingView) -> str:
   data-severity="{_e(finding.severity)}"
   data-status="{_e(finding.status)}"
   data-passed="{str(finding.passed).lower()}"
+  data-result-label="{_e(finding.status_label)}"
   data-search="{_e(search_blob)}">
   <summary>
     <span class="badge badge-{_e(finding.severity)}">{_e(finding.severity)}</span>
@@ -296,8 +300,8 @@ def _render_findings(data: PreparedReport) -> str:
 
 
 def _render_evidence_card(attack: AttackEvidenceView) -> str:
-    result_badge = "badge-blocked" if attack.passed else "badge-compromised"
-    result_label = "Blocked" if attack.passed else "Compromised"
+    result_badge = f"badge-{attack.result_label.lower()}"
+    result_label = attack.result_label
     search_blob = " ".join(
         [
             attack.attack_id,
@@ -337,6 +341,7 @@ def _render_evidence_card(attack: AttackEvidenceView) -> str:
   data-vulnerability="{_e(attack.vulnerability)}"
   data-severity="{_e(attack.severity)}"
   data-passed="{str(attack.passed).lower()}"
+  data-result-label="{_e(attack.result_label)}"
   data-search="{_e(search_blob)}">
   <summary>
     <span class="badge badge-{_e(attack.severity)}">{_e(attack.severity)}</span>

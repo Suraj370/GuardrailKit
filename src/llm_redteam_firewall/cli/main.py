@@ -11,6 +11,8 @@ import asyncio
 import logging
 import sys
 
+from dotenv import load_dotenv
+
 from llm_redteam_firewall.config import load_campaign_runner
 from llm_redteam_firewall.domain.errors import ConfigurationError, PluginNotFoundError
 
@@ -40,6 +42,7 @@ async def _run(config_path: str) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    load_dotenv()  # populates os.environ from a .env file, if present, before any target/config wiring
     parser = _build_parser()
     args = parser.parse_args(argv)
 

@@ -102,6 +102,28 @@ def _evaluation_reasoning(finding: Finding) -> str:
     return finding.reasoning
 
 
+def _is_errored(finding: Finding) -> bool:
+    """True when execution never produced a gradable response (see ``EvaluationEngine``)."""
+    return finding.metadata.get("outcome") == "errored"
+
+
+def _result_label(finding: Finding) -> str:
+    """The label shown for a finding's outcome: Errored, a judge/rule label, or Blocked/Compromised.
+
+    Prefers ``metadata["label"]`` (set by :class:`.CompositeJudgeEvaluator`
+    as ``"blocked"``/``"leaked"``/``"unsafe"``) over the plain boolean
+    ``passed``, so evaluators with finer-grained verdicts show them; any
+    evaluator that doesn't set a label falls back to the original
+    two-state Blocked/Compromised split.
+    """
+    if _is_errored(finding):
+        return "Errored"
+    label = finding.metadata.get("label")
+    if isinstance(label, str) and label:
+        return label.capitalize()
+    return "Blocked" if finding.passed else "Compromised"
+
+
 def _safe_jsonable(value: Any) -> Any:
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
@@ -139,6 +161,7 @@ class VulnerabilityBreakdownRow:
     attacks: int
     passed: int
     failed: int
+    errored: int
     success_rate: float
     average_score: float | None
 
@@ -180,6 +203,7 @@ class AttackEvidenceView:
     generator: str
     finding_id: str
     passed: bool
+    result_label: str
     severity: str
 
 
@@ -194,6 +218,7 @@ class ExecutiveSummary:
     total_findings: int
     passed: int
     failed: int
+    errored: int
     success_rate: float
     vulnerabilities_tested: tuple[str, ...]
     attack_generators: tuple[str, ...]
@@ -237,10 +262,16 @@ class PreparedReport:
 def prepare_report_data(report: Report) -> PreparedReport:
     """Build presentation data from a domain :class:`Report`."""
     findings = report.findings
-    passed = sum(1 for f in findings if f.passed)
-    failed = len(findings) - passed
+    # Errored findings (execution never produced a gradable response —
+    # see EvaluationEngine) are excluded from pass/fail/success-rate math
+    # so unrelated infra failures (timeouts, rate limits) can't inflate
+    # the Blocked count with attacks that were never actually graded.
+    graded_findings = tuple(f for f in findings if not _is_errored(f))
+    errored = len(findings) - len(graded_findings)
+    passed = sum(1 for f in graded_findings if f.passed)
+    failed = len(graded_findings) - passed
     # "Findings" in security-report sense: confirmed issues (failed / vulnerable).
-    issue_findings = tuple(f for f in findings if f.is_vulnerable)
+    issue_findings = tuple(f for f in graded_findings if f.is_vulnerable)
     total_findings = len(issue_findings)
 
     severity_counter: Counter[str] = Counter()
@@ -261,6 +292,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
             "attacks": 0,
             "passed": 0,
             "failed": 0,
+            "errored": 0,
             "scores": [],
         }
     )
@@ -270,7 +302,9 @@ def prepare_report_data(report: Report) -> PreparedReport:
         bucket["name"] = finding.vulnerability.name
         bucket["id"] = finding.vulnerability.id
         bucket["attacks"] += 1
-        if finding.passed:
+        if _is_errored(finding):
+            bucket["errored"] += 1
+        elif finding.passed:
             bucket["passed"] += 1
         else:
             bucket["failed"] += 1
@@ -280,9 +314,10 @@ def prepare_report_data(report: Report) -> PreparedReport:
     for key in sorted(vuln_stats.keys(), key=lambda k: vuln_stats[k]["name"].lower()):
         bucket = vuln_stats[key]
         attacks = bucket["attacks"]
+        graded = attacks - bucket["errored"]
         scores: list[float] = bucket["scores"]
         avg_score = (sum(scores) / len(scores)) if scores else None
-        success_rate = (bucket["passed"] / attacks) if attacks else 1.0
+        success_rate = (bucket["passed"] / graded) if graded else 1.0
         breakdown_rows.append(
             VulnerabilityBreakdownRow(
                 vulnerability=bucket["name"],
@@ -290,6 +325,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
                 attacks=attacks,
                 passed=bucket["passed"],
                 failed=bucket["failed"],
+                errored=bucket["errored"],
                 success_rate=success_rate,
                 average_score=avg_score,
             )
@@ -299,7 +335,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
     attack_views: list[AttackEvidenceView] = []
     for finding in findings:
         severity = resolve_severity(finding)
-        status_label = "Blocked" if finding.passed else "Compromised"
+        status_label = _result_label(finding)
         metadata = _safe_jsonable(dict(finding.metadata))
         if not isinstance(metadata, dict):
             metadata = {"value": metadata}
@@ -353,6 +389,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
                 generator=finding.attack.generator_name,
                 finding_id=finding.id,
                 passed=finding.passed,
+                result_label=status_label,
                 severity=severity,
             )
         )
@@ -381,7 +418,8 @@ def prepare_report_data(report: Report) -> PreparedReport:
         total_findings=total_findings,
         passed=passed,
         failed=failed,
-        success_rate=report.pass_rate,
+        errored=errored,
+        success_rate=(passed / len(graded_findings)) if graded_findings else 1.0,
         vulnerabilities_tested=vulnerabilities_tested,
         attack_generators=attack_generators,
         targets_tested=targets_tested,
@@ -398,7 +436,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
     charts = ChartData(
         findings_by_severity=findings_by_severity,
         findings_by_vulnerability=dict(sorted(findings_by_vuln.items())),
-        pass_vs_fail={"blocked": passed, "compromised": failed},
+        pass_vs_fail={"blocked": passed, "compromised": failed, "errored": errored},
         attacks_per_vulnerability=dict(sorted(attacks_per_vuln.items())),
     )
 
@@ -418,7 +456,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
                 }
             )
         ),
-        "result_labels": ("Blocked", "Compromised"),
+        "result_labels": tuple(sorted({fv.status_label for fv in finding_views})),
     }
 
     return PreparedReport(

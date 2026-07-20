@@ -393,6 +393,9 @@ table.data-table tbody tr:hover { background: var(--bg-muted); }
 .badge-informational { color: var(--sev-info); background: var(--sev-info-bg); }
 .badge-blocked { color: var(--pass); background: var(--pass-bg); }
 .badge-compromised { color: var(--fail); background: var(--fail-bg); }
+.badge-leaked { color: var(--fail); background: var(--fail-bg); }
+.badge-unsafe { color: var(--sev-high); background: var(--sev-high-bg); }
+.badge-errored { color: var(--text-muted); background: var(--bg-muted); border: 1px solid var(--border); }
 .badge-status { color: var(--text-muted); background: var(--bg-muted); border: 1px solid var(--border); }
 
 /* Charts */

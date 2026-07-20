@@ -143,6 +143,8 @@ def build_campaign_runner(config: CampaignConfig) -> CampaignRunner:
         target=target,
         concurrency=config.concurrency,
         timeout_seconds=config.timeout_seconds,
+        max_retries=config.max_retries,
+        retry_backoff_seconds=config.retry_backoff_seconds,
     )
     evaluation_engine = EvaluationEngine(evaluator=evaluator, concurrency=config.concurrency)
 

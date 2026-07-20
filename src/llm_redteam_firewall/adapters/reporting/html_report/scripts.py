@@ -191,11 +191,7 @@ JS = r"""
       if (vuln && card.getAttribute("data-vulnerability") !== vuln) match = false;
       if (severity && card.getAttribute("data-severity") !== severity) match = false;
       if (status && card.getAttribute("data-status") !== status) match = false;
-      if (result) {
-        var passed = card.getAttribute("data-passed") === "true";
-        if (result === "Blocked" && !passed) match = false;
-        if (result === "Compromised" && passed) match = false;
-      }
+      if (result && card.getAttribute("data-result-label") !== result) match = false;
       if (q) {
         var hay = normalize(card.getAttribute("data-search") || "");
         if (hay.indexOf(q) === -1) match = false;
@@ -210,11 +206,7 @@ JS = r"""
       var match = true;
       if (vuln && card.getAttribute("data-vulnerability") !== vuln) match = false;
       if (severity && card.getAttribute("data-severity") !== severity) match = false;
-      if (result) {
-        var passed = card.getAttribute("data-passed") === "true";
-        if (result === "Blocked" && !passed) match = false;
-        if (result === "Compromised" && passed) match = false;
-      }
+      if (result && card.getAttribute("data-result-label") !== result) match = false;
       if (q) {
         var hay = normalize(card.getAttribute("data-search") || "");
         if (hay.indexOf(q) === -1) match = false;

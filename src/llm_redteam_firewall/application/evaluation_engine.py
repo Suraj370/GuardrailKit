@@ -40,11 +40,19 @@ class EvaluationEngine:
         async def _evaluate_one(attack: Attack, attack_result: AttackResult) -> EvaluationResult:
             async with semaphore:
                 if not attack_result.succeeded:
+                    # Execution never produced a real response (retries in
+                    # ExecutionEngine already exhausted) — there is nothing
+                    # to grade, so this is neither a pass nor a fail. It is
+                    # tagged "errored" in metadata rather than folded into
+                    # a security verdict, so reporting can surface it
+                    # distinctly and exclude it from success-rate math
+                    # instead of silently inflating "Blocked".
                     return EvaluationResult(
                         attack_id=attack.id,
                         passed=True,
-                        reasoning=f"target execution failed, treated as non-vulnerable: {attack_result.error}",
+                        reasoning=f"target execution failed, excluded from grading: {attack_result.error}",
                         evaluator_name=self._evaluator.name,
+                        metadata={"outcome": "errored", "error": attack_result.error},
                     )
                 return await self._evaluator.evaluate(vulnerability, attack, attack_result)
 

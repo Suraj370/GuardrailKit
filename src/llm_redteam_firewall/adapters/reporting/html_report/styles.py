@@ -391,8 +391,8 @@ table.data-table tbody tr:hover { background: var(--bg-muted); }
 .badge-medium { color: var(--sev-medium); background: var(--sev-medium-bg); }
 .badge-low { color: var(--sev-low); background: var(--sev-low-bg); }
 .badge-informational { color: var(--sev-info); background: var(--sev-info-bg); }
-.badge-passed { color: var(--pass); background: var(--pass-bg); }
-.badge-failed { color: var(--fail); background: var(--fail-bg); }
+.badge-blocked { color: var(--pass); background: var(--pass-bg); }
+.badge-compromised { color: var(--fail); background: var(--fail-bg); }
 .badge-status { color: var(--text-muted); background: var(--bg-muted); border: 1px solid var(--border); }
 
 /* Charts */

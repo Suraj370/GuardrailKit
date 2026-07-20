@@ -68,8 +68,8 @@ def _render_executive_summary(data: PreparedReport) -> str:
       <div class="summary-item"><div class="label">Duration</div><div class="value">{_e(s.duration_display)}</div></div>
       <div class="summary-item"><div class="label">Total attacks executed</div><div class="value">{s.total_attacks}</div></div>
       <div class="summary-item"><div class="label">Total findings</div><div class="value">{s.total_findings}</div></div>
-      <div class="summary-item"><div class="label">Passed</div><div class="value">{s.passed}</div></div>
-      <div class="summary-item"><div class="label">Failed</div><div class="value">{s.failed}</div></div>
+      <div class="summary-item"><div class="label">Blocked</div><div class="value">{s.passed}</div></div>
+      <div class="summary-item"><div class="label">Compromised</div><div class="value">{s.failed}</div></div>
       <div class="summary-item"><div class="label">Success rate</div><div class="value">{_pct(s.success_rate)}</div></div>
     </div>
     <div class="summary-grid">
@@ -124,8 +124,8 @@ def _render_charts() -> str:
       <canvas id="chart-findings-vuln" aria-label="Findings by vulnerability chart" role="img"></canvas>
     </div>
     <div class="chart-card">
-      <h3>Pass vs Fail</h3>
-      <canvas id="chart-pass-fail" aria-label="Pass versus fail chart" role="img"></canvas>
+      <h3>Blocked vs Compromised</h3>
+      <canvas id="chart-pass-fail" aria-label="Blocked versus compromised chart" role="img"></canvas>
     </div>
     <div class="chart-card">
       <h3>Attacks per vulnerability</h3>
@@ -164,8 +164,8 @@ def _render_vulnerabilities(data: PreparedReport) -> str:
         <tr>
           <th>Vulnerability</th>
           <th>Number of attacks</th>
-          <th>Passed</th>
-          <th>Failed</th>
+          <th>Blocked</th>
+          <th>Compromised</th>
           <th>Success rate</th>
           <th>Average score</th>
         </tr>
@@ -216,7 +216,7 @@ def _detail(title: str, content: str, open_by_default: bool = False) -> str:
 
 
 def _render_finding_card(finding: FindingView) -> str:
-    result_badge = "badge-passed" if finding.passed else "badge-failed"
+    result_badge = "badge-blocked" if finding.passed else "badge-compromised"
     search_blob = " ".join(
         [
             finding.id,
@@ -296,8 +296,8 @@ def _render_findings(data: PreparedReport) -> str:
 
 
 def _render_evidence_card(attack: AttackEvidenceView) -> str:
-    result_badge = "badge-passed" if attack.passed else "badge-failed"
-    result_label = "Passed" if attack.passed else "Failed"
+    result_badge = "badge-blocked" if attack.passed else "badge-compromised"
+    result_label = "Blocked" if attack.passed else "Compromised"
     search_blob = " ".join(
         [
             attack.attack_id,

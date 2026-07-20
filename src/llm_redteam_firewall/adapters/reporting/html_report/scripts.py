@@ -193,8 +193,8 @@ JS = r"""
       if (status && card.getAttribute("data-status") !== status) match = false;
       if (result) {
         var passed = card.getAttribute("data-passed") === "true";
-        if (result === "Passed" && !passed) match = false;
-        if (result === "Failed" && passed) match = false;
+        if (result === "Blocked" && !passed) match = false;
+        if (result === "Compromised" && passed) match = false;
       }
       if (q) {
         var hay = normalize(card.getAttribute("data-search") || "");
@@ -212,8 +212,8 @@ JS = r"""
       if (severity && card.getAttribute("data-severity") !== severity) match = false;
       if (result) {
         var passed = card.getAttribute("data-passed") === "true";
-        if (result === "Passed" && !passed) match = false;
-        if (result === "Failed" && passed) match = false;
+        if (result === "Blocked" && !passed) match = false;
+        if (result === "Compromised" && passed) match = false;
       }
       if (q) {
         var hay = normalize(card.getAttribute("data-search") || "");

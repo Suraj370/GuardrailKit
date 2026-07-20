@@ -299,7 +299,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
     attack_views: list[AttackEvidenceView] = []
     for finding in findings:
         severity = resolve_severity(finding)
-        status_label = "Passed" if finding.passed else "Failed"
+        status_label = "Blocked" if finding.passed else "Compromised"
         metadata = _safe_jsonable(dict(finding.metadata))
         if not isinstance(metadata, dict):
             metadata = {"value": metadata}
@@ -398,7 +398,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
     charts = ChartData(
         findings_by_severity=findings_by_severity,
         findings_by_vulnerability=dict(sorted(findings_by_vuln.items())),
-        pass_vs_fail={"passed": passed, "failed": failed},
+        pass_vs_fail={"blocked": passed, "compromised": failed},
         attacks_per_vulnerability=dict(sorted(attacks_per_vuln.items())),
     )
 
@@ -418,7 +418,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
                 }
             )
         ),
-        "result_labels": ("Passed", "Failed"),
+        "result_labels": ("Blocked", "Compromised"),
     }
 
     return PreparedReport(

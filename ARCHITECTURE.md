@@ -215,8 +215,8 @@ A separate subpackage, not a `domain.models` entity: `VulnerabilityDefinition`
 reference data describing a *kind* of vulnerability, distinct from the
 `Vulnerability` a campaign actually authors. `VulnerabilityRegistry`
 (`register` / `get` / `all` / `names`) holds them by id, pre-seeded with
-six built-ins (`prompt_injection`, `jailbreak`, `prompt_leakage`,
-`pii_leakage`, `secret_leakage`, `tool_misuse`) at the module-level
+seven built-ins (`prompt_injection`, `jailbreak`, `prompt_leakage`,
+`pii_leakage`, `secret_leakage`, `tool_misuse`, `hateful_content`) at the module-level
 singleton `VULNERABILITY_REGISTRY`. `to_vulnerability(definition, ...)`
 projects a definition into a concrete `Vulnerability`, carrying the
 implementation defaults in `Vulnerability.metadata` rather than adding
@@ -471,9 +471,10 @@ point built from real Garak module names verified against Garak's source at inte
 | `prompt_injection` | `promptinject.*`, `latentinjection.*` | direct match |
 | `jailbreak` | `dan.*`, `encoding.*`, `suffix.*`, `grandma.*`, `dra.*` | direct match |
 | `prompt_leakage` | `leakreplay.*`, `sysprompt_extraction.*`, `divergence.*` | direct match |
-| `pii_leakage` | `leakreplay.*`, `donotanswer.*` | **approximate** — no dedicated Garak PII module exists |
+| `pii_leakage` | `leakreplay.*` | **approximate** — no dedicated Garak PII module exists |
 | `secret_leakage` | `apikey.*` | direct match |
 | `tool_misuse` | `exploitation.*`, `packagehallucination.*` | **approximate** — no dedicated Garak "excessive agency" module exists |
+| `hateful_content` | `donotanswer.*` | direct match — toxic/discriminatory/hateful/offensive content refusal testing |
 
 Override or extend this entirely from YAML via the `probe_mapping` param (see the config example
 below) — nothing here is baked into `if vulnerability.id == ...:` branching logic.
@@ -496,7 +497,7 @@ each is a documented, deliberate scope boundary):
    with a mix of `str`/`Message` and `Conversation` entries still yields the extractable ones).
 2. **No canonical vulnerability -> probe mapping exists in Garak.** `DEFAULT_PROBE_MAPPING` is
    this integration's own best-effort curation, verified against real module names, not sourced
-   from Garak documentation — two of six built-in vulnerability ids (`pii_leakage`, `tool_misuse`)
+   from Garak documentation — two of seven built-in vulnerability ids (`pii_leakage`, `tool_misuse`)
    have no exact Garak module match.
 3. **Some probes require Garak's own optional extras.** Audio/image-based probe modules
    (`audio.py`, `visual_jailbreak.py`, ...) fail to import unless those extras are installed on

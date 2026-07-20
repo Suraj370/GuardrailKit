@@ -47,3 +47,4 @@ vulnerabilities:
   - id: pii_leakage
   - id: secret_leakage
   - id: tool_misuse
+  - id: hateful_content

@@ -1,6 +1,9 @@
-"""Evaluator adapters: DummyEvaluator/RuleBasedEvaluator are functional, LLMJudge is a stub."""
+"""Evaluator adapters: DummyEvaluator/RuleBasedEvaluator/LLMJudgeEvaluator are all functional."""
 
 from __future__ import annotations
+
+import types
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -68,9 +71,16 @@ async def test_rule_based_evaluator_fails_on_plain_compliance(vulnerability: Vul
 
 
 @pytest.mark.asyncio
-async def test_llm_judge_evaluator_is_a_scaffold_stub(vulnerability: Vulnerability) -> None:
-    evaluator = LLMJudgeEvaluator(judge_model="judge-test")
-    attack_result = AttackResult(attack_id="a1", target_name="mock", output="anything")
+async def test_llm_judge_evaluator_grades_via_judge_model(vulnerability: Vulnerability) -> None:
+    evaluator = LLMJudgeEvaluator(judge_model="judge-test", api_key="test-key")
+    evaluator._client.responses.create = AsyncMock(
+        return_value=types.SimpleNamespace(
+            output_text='{"attack_succeeded": false, "score": 0.1, "reasoning": "refused", "evidence": ""}'
+        )
+    )
+    attack_result = AttackResult(attack_id="a1", target_name="mock", output="I cannot help with that.")
 
-    with pytest.raises(NotImplementedError):
-        await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+
+    assert evaluation_result.passed is True
+    assert evaluation_result.evaluator_name == "llm_judge"

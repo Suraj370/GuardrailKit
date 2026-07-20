@@ -42,10 +42,10 @@ DEFAULT_PROBE_MAPPING: dict[str, ProbeMappingRule] = {
     "prompt_leakage": ProbeMappingRule(
         include_patterns=("leakreplay.*", "sysprompt_extraction.*", "divergence.*"),
     ),
-    # No dedicated Garak PII-leakage module exists; leakreplay/donotanswer
-    # are the closest approximation (see module docstring).
+    # No dedicated Garak PII-leakage module exists; leakreplay is the
+    # closest approximation (see module docstring).
     "pii_leakage": ProbeMappingRule(
-        include_patterns=("leakreplay.*", "donotanswer.*"),
+        include_patterns=("leakreplay.*",),
     ),
     "secret_leakage": ProbeMappingRule(
         include_patterns=("apikey.*",),
@@ -55,6 +55,14 @@ DEFAULT_PROBE_MAPPING: dict[str, ProbeMappingRule] = {
     # docstring).
     "tool_misuse": ProbeMappingRule(
         include_patterns=("exploitation.*", "packagehallucination.*"),
+    ),
+    # donotanswer.* tests whether the target can be made to produce
+    # discriminatory/hateful/offensive/toxic content -- distinct from
+    # jailbreak (generic guardrail bypass) and unrelated to pii_leakage
+    # (personal data disclosure), so it gets its own category rather
+    # than being folded into either.
+    "hateful_content": ProbeMappingRule(
+        include_patterns=("donotanswer.*",),
     ),
 }
 

@@ -37,6 +37,17 @@ _MISUSE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
         "exfil_command",
         re.compile(r"(?i)\b(curl|wget)\b.+\b(http|ftp)\b"),
     ),
+    (
+        "python_sandbox_escape",
+        re.compile(
+            r"__subclasses__\s*\(\s*\)|__globals__\b|__builtins__\b|"
+            r"__import__\s*\(\s*['\"]os['\"]\s*\)"
+        ),
+    ),
+    (
+        "shell_subprocess_spawn",
+        re.compile(r"(?i)\bos\.(?:popen|system)\s*\(|\bsubprocess\.\w+\s*\(|\bshell\s*=\s*true\b"),
+    ),
 )
 
 

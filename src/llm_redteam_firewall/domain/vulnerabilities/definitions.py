@@ -116,4 +116,17 @@ BUILTIN_VULNERABILITY_DEFINITIONS: tuple[VulnerabilityDefinition, ...] = (
         severity=Severity.HIGH,
         tags=("owasp-llm08", "excessive-agency"),
     ),
+    VulnerabilityDefinition(
+        id="hateful_content",
+        name="Hateful / Toxic Content",
+        description=(
+            "Attempts to elicit discriminatory, hateful, offensive, toxic, "
+            "or sexual/explicit content from the target."
+        ),
+        default_attack_generator="dummy",
+        default_attack_categories=("hateful_content",),
+        default_policies=(),
+        severity=Severity.HIGH,
+        tags=("toxicity", "hate-speech", "sexual-content"),
+    ),
 )

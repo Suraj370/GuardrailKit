@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from llm_redteam_firewall.application import EvaluationEngine
-from llm_redteam_firewall.domain.errors import EvaluationError
-from llm_redteam_firewall.domain.models import Attack, AttackResult, EvaluationResult, Vulnerability
+from llm_redteam.application import EvaluationEngine
+from llm_redteam.domain.errors import EvaluationError
+from llm_redteam.domain.models import Attack, AttackResult, EvaluationResult, Vulnerability
 
 
 class _AlwaysFailEvaluator:

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from llm_redteam_firewall.application import PolicyEngine
-from llm_redteam_firewall.domain.models import Attack, Finding, Response, Severity
-from llm_redteam_firewall.domain.ports import Policy
-from llm_redteam_firewall.plugins import POLICIES
+from llm_redteam.application import PolicyEngine
+from llm_redteam.domain.models import Attack, Finding, Response, Severity
+from llm_redteam.domain.ports import Policy
+from llm_redteam.plugins import POLICIES
 
 
 class _FlagPolicy(Policy):

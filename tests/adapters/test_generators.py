@@ -7,9 +7,9 @@ objects, unlike this simple dependency-free generator).
 
 from __future__ import annotations
 
-from llm_redteam_firewall.adapters.generators.dummy_generator import DummyAttackGenerator
-from llm_redteam_firewall.domain.models import Vulnerability
-from llm_redteam_firewall.plugins import GENERATORS
+from llm_redteam.adapters.generators.dummy_generator import DummyAttackGenerator
+from llm_redteam.domain.models import Vulnerability
+from llm_redteam.plugins import GENERATORS
 
 
 def test_dummy_generator_respects_max_attacks(vulnerability: Vulnerability) -> None:

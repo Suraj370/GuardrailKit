@@ -6,8 +6,8 @@ import dataclasses
 
 import pytest
 
-from llm_redteam_firewall.domain.campaigns import AttackBatch, ExecutionStrategy, RetryPolicy
-from llm_redteam_firewall.domain.models import Attack
+from llm_redteam.domain.campaigns import AttackBatch, ExecutionStrategy, RetryPolicy
+from llm_redteam.domain.models import Attack
 
 
 def _attack(id: str = "a1") -> Attack:

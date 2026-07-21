@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from llm_redteam_firewall.domain.errors import PluginNotFoundError
-from llm_redteam_firewall.plugins.registry import Registry
+from llm_redteam.domain.errors import PluginNotFoundError
+from llm_redteam.plugins.registry import Registry
 
 
 class _Widget:

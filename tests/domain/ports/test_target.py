@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from llm_redteam_firewall.adapters.targets.mock_target import MockTarget
-from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
-from llm_redteam_firewall.domain.ports import Target
+from llm_redteam.adapters.targets.mock_target import MockTarget
+from llm_redteam.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam.domain.ports import Target
 
 
 def test_cannot_instantiate_the_interface_directly() -> None:

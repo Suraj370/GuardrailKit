@@ -1,12 +1,12 @@
 # Runs the real Garak-backed attack generator (requires the `garak` extra
-# installed: pip install 'llm-redteam-firewall[garak]') against a real
+# installed: pip install 'llm-redteam[garak]') against a real
 # OpenAI model (requires the `openai` extra: pip install
-# 'llm-redteam-firewall[openai]', plus OPENAI_API_KEY set in the
+# 'llm-redteam[openai]', plus OPENAI_API_KEY set in the
 # environment or in a .env file in the working directory — the CLI
 # loads it automatically via python-dotenv), and renders the result as
 # a standalone HTML report:
 #
-#   llm-redteam-firewall run --config configs/garak_html_demo.yaml
+#   llm-redteam run --config configs/garak_html_demo.yaml
 #
 # Swap `target:` to point at a different model, or back to `type: mock`
 # for a zero-dependency, zero-cost pipeline smoke test.

@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from llm_redteam_firewall.adapters.generators.garak.generator import GarakAttackGenerator
-from llm_redteam_firewall.adapters.generators.garak.models import ProbeMappingRule
-from llm_redteam_firewall.adapters.generators.garak.probe_selector import (
+from llm_redteam.adapters.generators.garak.generator import GarakAttackGenerator
+from llm_redteam.adapters.generators.garak.models import ProbeMappingRule
+from llm_redteam.adapters.generators.garak.probe_selector import (
     DEFAULT_PROBE_MAPPING,
 )
-from llm_redteam_firewall.domain.models import Severity, Vulnerability
-from llm_redteam_firewall.plugins import GENERATORS
+from llm_redteam.domain.models import Severity, Vulnerability
+from llm_redteam.plugins import GENERATORS
 
 
 def _vulnerability(id_: str = "jailbreak") -> Vulnerability:

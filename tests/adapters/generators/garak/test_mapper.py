@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from llm_redteam_firewall.adapters.generators.garak.mapper import garak_prompts_to_attacks
-from llm_redteam_firewall.adapters.generators.garak.models import GarakProbeInfo
-from llm_redteam_firewall.domain.models import Severity, Vulnerability
+from llm_redteam.adapters.generators.garak.mapper import garak_prompts_to_attacks
+from llm_redteam.adapters.generators.garak.models import GarakProbeInfo
+from llm_redteam.domain.models import Severity, Vulnerability
 
 
 class _FakeMessage:

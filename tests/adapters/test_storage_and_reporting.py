@@ -5,11 +5,11 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 
-from llm_redteam_firewall.adapters.reporting.console_reporter import ConsoleReporter
-from llm_redteam_firewall.adapters.reporting.html_reporter import HTMLReporter
-from llm_redteam_firewall.adapters.reporting.json_reporter import JSONReporter
-from llm_redteam_firewall.adapters.storage.in_memory_storage import InMemoryStorage
-from llm_redteam_firewall.domain.models import (
+from llm_redteam.adapters.reporting.console_reporter import ConsoleReporter
+from llm_redteam.adapters.reporting.html_reporter import HTMLReporter
+from llm_redteam.adapters.reporting.json_reporter import JSONReporter
+from llm_redteam.adapters.storage.in_memory_storage import InMemoryStorage
+from llm_redteam.domain.models import (
     Attack,
     AttackResult,
     Finding,

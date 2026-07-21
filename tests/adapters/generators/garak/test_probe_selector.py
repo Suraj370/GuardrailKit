@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from llm_redteam_firewall.adapters.generators.garak.models import ProbeMappingRule
-from llm_redteam_firewall.adapters.generators.garak.probe_registry import ProbeRegistry
-from llm_redteam_firewall.adapters.generators.garak.probe_selector import (
+from llm_redteam.adapters.generators.garak.models import ProbeMappingRule
+from llm_redteam.adapters.generators.garak.probe_registry import ProbeRegistry
+from llm_redteam.adapters.generators.garak.probe_selector import (
     DEFAULT_PROBE_MAPPING,
     ProbeSelector,
     normalize_pattern,

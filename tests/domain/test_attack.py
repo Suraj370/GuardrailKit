@@ -6,7 +6,7 @@ import dataclasses
 
 import pytest
 
-from llm_redteam_firewall.domain.models import Attack
+from llm_redteam.domain.models import Attack
 
 
 def test_defaults() -> None:

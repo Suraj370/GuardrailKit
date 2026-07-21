@@ -1,9 +1,9 @@
 # Architecture
 
-`llm-redteam-firewall` is a **pluggable LLM red-team harness** built with
+`llm-redteam` is a **pluggable LLM red-team harness** built with
 **Clean Architecture / Hexagonal Architecture**. Domain logic sits at the
 center and knows nothing about frameworks or I/O. Everything else —
-adapters, config, CLI — depends *inward* on the domain, never the reverse.
+adapters, config, CLI — depends _inward_ on the domain, never the reverse.
 
 > **Status (v0.1.0):** Scaffold with a fully wired campaign pipeline and a
 > rule-based policy framework. Dummy/mock/in-memory adapters run end-to-end
@@ -17,16 +17,16 @@ adapters, config, CLI — depends *inward* on the domain, never the reverse.
 Red-teaming an LLM application means running the same shape of pipeline
 against wildly different systems:
 
-| Concern | Examples |
-|---------|----------|
-| **Targets** | Hosted API, in-house agent, RAG pipeline, local model |
-| **Attack sources** | Static prompts, fuzzing library, LLM mutator |
-| **Graders** | Keyword rules, judge model, classifier |
-| **Firewall rules** | PII / secret / prompt-leak / tool-misuse detectors |
+| Concern            | Examples                                              |
+| ------------------ | ----------------------------------------------------- |
+| **Targets**        | Hosted API, in-house agent, RAG pipeline, local model |
+| **Attack sources** | Static prompts, fuzzing library, LLM mutator          |
+| **Graders**        | Keyword rules, judge model, classifier                |
+| **Firewall rules** | PII / secret / prompt-leak / tool-misuse detectors    |
 
 This framework treats all of those as **swappable plugins** behind narrow
-interfaces, so orchestration — *for each vulnerability: generate → execute →
-evaluate → store → report* — never has to change when an adapter is swapped.
+interfaces, so orchestration — _for each vulnerability: generate → execute →
+evaluate → store → report_ — never has to change when an adapter is swapped.
 
 There is a second, parallel path for **policy evaluation** (firewall rules
 over any attack/response pair), independent of the campaign vulnerability list.
@@ -66,7 +66,7 @@ require a campaign vulnerability list and are not yet wired into
 ## 3. Repository layout
 
 ```
-llm-redteam-firewall/
+llm-redteam/
 ├── pyproject.toml                 # package metadata, deps, tool config
 ├── Makefile                       # install, test, lint, example runners
 ├── README.md
@@ -158,14 +158,14 @@ graph LR
     PLG --> DOM
 ```
 
-| Package | May import | Must not import |
-|---------|------------|-----------------|
-| `domain` | stdlib only | anything else in this project |
-| `application` | `domain` only | `adapters`, `plugins`, `config`, `cli` |
-| `plugins` | `domain.ports` (typing) | `application`, `adapters`, `config` |
-| `adapters.*` | `domain`, `plugins` | `application`, other adapter packages, `config`, `cli` |
-| `config` | **everything** (composition root) | — |
-| `cli` | `config` (+ domain errors for exit codes) | adapters / application directly |
+| Package       | May import                                | Must not import                                        |
+| ------------- | ----------------------------------------- | ------------------------------------------------------ |
+| `domain`      | stdlib only                               | anything else in this project                          |
+| `application` | `domain` only                             | `adapters`, `plugins`, `config`, `cli`                 |
+| `plugins`     | `domain.ports` (typing)                   | `application`, `adapters`, `config`                    |
+| `adapters.*`  | `domain`, `plugins`                       | `application`, other adapter packages, `config`, `cli` |
+| `config`      | **everything** (composition root)         | —                                                      |
+| `cli`         | `config` (+ domain errors for exit codes) | adapters / application directly                        |
 
 **Practical effect:** `CampaignOrchestrator` has never heard of `MockTarget` or
 `DummyAttackGenerator`. It only depends on ports (`AttackGenerator`, `Target`,
@@ -212,7 +212,7 @@ scheduler, retry loop, or concurrency limiter reads
 A separate subpackage, not a `domain.models` entity: `VulnerabilityDefinition`
 (`id`, `name`, `description`, `default_attack_generator`,
 `default_attack_categories`, `default_policies`, `severity`, `tags`) is
-reference data describing a *kind* of vulnerability, distinct from the
+reference data describing a _kind_ of vulnerability, distinct from the
 `Vulnerability` a campaign actually authors. `VulnerabilityRegistry`
 (`register` / `get` / `all` / `names`) holds them by id, pre-seeded with
 seven built-ins (`prompt_injection`, `jailbreak`, `prompt_leakage`,
@@ -226,26 +226,26 @@ This lets a campaign reference a vulnerability by id alone —
 `config.loader` resolves `{id: pii_leakage}` (no `name`/`category`)
 against the registry; explicit `name`+`category` in YAML still bypasses
 the registry entirely, unchanged from before. Nothing here imports
-`plugins` or `adapters` — the definitions only carry plugin *names* as
+`plugins` or `adapters` — the definitions only carry plugin _names_ as
 strings, so the domain layer's "stdlib only" import rule holds. Garak
 probe mapping is an intentional gap: no field for it exists yet (see
 §10).
 
 ### 5.1 Models (`domain.models`)
 
-| Entity | Role |
-|--------|------|
-| `Severity` | Ordered scale: `low` → `medium` → `high` → `critical` |
-| `Vulnerability` | Named class of undesirable behavior to probe |
-| `Campaign` | Named run: vulnerabilities + limits (max attacks, concurrency) |
-| `Attack` | One concrete probe prompt (immutable) |
-| `AttackResult` | Target output (or error) for one attack |
-| `Response` | Policy-facing view of target output; converts to/from `AttackResult` |
-| `ExecutionContext` | Per-execution metadata (campaign name, timeout) |
-| `EvaluationResult` | Verdict produced by an `Evaluator`: `passed=True` means target *resisted* the attack |
-| `Finding` | Full story: vulnerability + attack + result + verdict (`passed`/`reasoning`/`score`/`source` as plain fields, not a nested `EvaluationResult`); unit of storage/report |
-| `FindingStatus` | Lifecycle: open, confirmed, false_positive, accepted_risk, resolved |
-| `Report` | Immutable end-of-campaign summary (`pass_rate`, `vulnerable_findings`) |
+| Entity             | Role                                                                                                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Severity`         | Ordered scale: `low` → `medium` → `high` → `critical`                                                                                                                  |
+| `Vulnerability`    | Named class of undesirable behavior to probe                                                                                                                           |
+| `Campaign`         | Named run: vulnerabilities + limits (max attacks, concurrency)                                                                                                         |
+| `Attack`           | One concrete probe prompt (immutable)                                                                                                                                  |
+| `AttackResult`     | Target output (or error) for one attack                                                                                                                                |
+| `Response`         | Policy-facing view of target output; converts to/from `AttackResult`                                                                                                   |
+| `ExecutionContext` | Per-execution metadata (campaign name, timeout)                                                                                                                        |
+| `EvaluationResult` | Verdict produced by an `Evaluator`: `passed=True` means target _resisted_ the attack                                                                                   |
+| `Finding`          | Full story: vulnerability + attack + result + verdict (`passed`/`reasoning`/`score`/`source` as plain fields, not a nested `EvaluationResult`); unit of storage/report |
+| `FindingStatus`    | Lifecycle: open, confirmed, false_positive, accepted_risk, resolved                                                                                                    |
+| `Report`           | Immutable end-of-campaign summary (`pass_rate`, `vulnerable_findings`)                                                                                                 |
 
 **Campaign data flow (entities):**
 
@@ -280,14 +280,14 @@ Convention for grading:
 
 Ports are the hexagon’s boundary. Application code depends only on these.
 
-| Port | Kind | Responsibility |
-|------|------|----------------|
-| `AttackGenerator` | ABC | `generate(vulnerability, max_attacks) → list[Attack]` |
-| `Target` | ABC | `async execute(ctx, attack) → AttackResult` |
-| `Evaluator` | ABC | `async evaluate(vuln, attack, result) → EvaluationResult` |
-| `Policy` | ABC | `evaluate(attack, response) → list[Finding]` |
-| `Reporter` | ABC | `report(report) → None` |
-| `FindingsStorage` | Protocol | `save(finding)`, `list(campaign_name?)` |
+| Port              | Kind     | Responsibility                                            |
+| ----------------- | -------- | --------------------------------------------------------- |
+| `AttackGenerator` | ABC      | `generate(vulnerability, max_attacks) → list[Attack]`     |
+| `Target`          | ABC      | `async execute(ctx, attack) → AttackResult`               |
+| `Evaluator`       | ABC      | `async evaluate(vuln, attack, result) → EvaluationResult` |
+| `Policy`          | ABC      | `evaluate(attack, response) → list[Finding]`              |
+| `Reporter`        | ABC      | `report(report) → None`                                   |
+| `FindingsStorage` | Protocol | `save(finding)`, `list(campaign_name?)`                   |
 
 `Policy` includes a protected `_finding(...)` helper so rule adapters can emit
 consistent `Finding` objects without re-implementing vulnerability/result wiring.
@@ -319,12 +319,12 @@ Use cases that orchestrate ports. **No knowledge of concrete adapters.**
 
 Top-level campaign use case. Shape of a full run:
 
-1. For each `Vulnerability` in the campaign  
-2. Generate attacks via `AttackGenerator`  
-3. Execute via `ExecutionEngine`  
-4. Grade via `EvaluationEngine`  
-5. Build `Finding`s, persist via `FindingsStorage`  
-6. Build one immutable `Report`  
+1. For each `Vulnerability` in the campaign
+2. Generate attacks via `AttackGenerator`
+3. Execute via `ExecutionEngine`
+4. Grade via `EvaluationEngine`
+5. Build `Finding`s, persist via `FindingsStorage`
+6. Build one immutable `Report`
 7. Invoke every configured `Reporter`
 
 Does **not** currently invoke `PolicyEngine` (policies are a separate path).
@@ -360,13 +360,13 @@ Path: `src/llm_redteam_firewall/plugins/`
 
 Used for **pick-one-by-config** ports:
 
-| Global | Category string | Port |
-|--------|-----------------|------|
-| `GENERATORS` | `generators` | `AttackGenerator` |
-| `TARGETS` | `targets` | `Target` |
-| `EVALUATORS` | `evaluators` | `Evaluator` |
-| `STORAGE` | `storage` | `FindingsStorage` |
-| `REPORTERS` | `reporters` | `Reporter` |
+| Global       | Category string | Port              |
+| ------------ | --------------- | ----------------- |
+| `GENERATORS` | `generators`    | `AttackGenerator` |
+| `TARGETS`    | `targets`       | `Target`          |
+| `EVALUATORS` | `evaluators`    | `Evaluator`       |
+| `STORAGE`    | `storage`       | `FindingsStorage` |
+| `REPORTERS`  | `reporters`     | `Reporter`        |
 
 Features:
 
@@ -404,10 +404,10 @@ as a side effect (used by config loader, CLI, tests, examples).
 
 ### 8.1 Generators (`adapters.generators`)
 
-| Name | Status | Notes |
-|------|--------|-------|
-| `dummy` | **Functional** | Template prompts from vulnerability description (`adapters/generators/dummy_generator.py`) |
-| `garak` | **Functional** (requires `garak` extra) | Reads Garak's probe corpus (`adapters/generators/garak/`) — see §8.1a |
+| Name    | Status                                  | Notes                                                                                      |
+| ------- | --------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `dummy` | **Functional**                          | Template prompts from vulnerability description (`adapters/generators/dummy_generator.py`) |
+| `garak` | **Functional** (requires `garak` extra) | Reads Garak's probe corpus (`adapters/generators/garak/`) — see §8.1a                      |
 
 Both register into the same `GENERATORS` factory registry (§7.1); `generator: {type: garak}` in
 YAML needs no other change anywhere in the framework. `garak` is a subpackage
@@ -421,10 +421,10 @@ consumer of `AttackGenerator` are unaware of the difference either way.
 **What this integration does, precisely:** `GarakAttackGenerator` reads prompts out of Garak's
 probe corpus and converts them into this framework's `Attack` objects. It never calls Garak's
 `Probe.probe(generator)` — verified against Garak's source, that method both mints Garak
-`Attempt`s *and executes them* against whatever `garak.generators.base.Generator` is passed in,
+`Attempt`s _and executes them_ against whatever `garak.generators.base.Generator` is passed in,
 i.e. it is Garak's own execution stage. Calling it would mean asking Garak to run attacks against
 a Garak-specific model wrapper, duplicating and conflicting with this framework's own
-`ExecutionEngine`. Instead, each selected probe is only *instantiated* (which runs its `__init__`
+`ExecutionEngine`. Instead, each selected probe is only _instantiated_ (which runs its `__init__`
 — where Garak populates `self.prompts`, before `probe()` is ever called) and its `.prompts` list
 is read directly. Garak's `Generator`, `Harness`, and `Detector` types are never touched by this
 framework; grading stays entirely `EvaluationEngine`/`PolicyEngine`'s job, as for every other
@@ -432,13 +432,13 @@ generator.
 
 Module layout (`src/llm_redteam_firewall/adapters/generators/garak/`):
 
-| File | Responsibility |
-|------|-----------------|
-| `models.py` | `GarakProbeInfo` (probe metadata, read without instantiating), `ProbeMappingRule` |
+| File                | Responsibility                                                                                                                                                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `models.py`         | `GarakProbeInfo` (probe metadata, read without instantiating), `ProbeMappingRule`                                                                                                                                                                                                                                      |
 | `probe_registry.py` | `ProbeRegistry`: discovers probes via `garak._plugins.enumerate_plugins("probes")` (no hardcoded probe list); reads class-level metadata (`tags`/`goal`/`primary_detector`/...) via `getattr` on the imported class, without instantiating; `load_probe_instance()` is the one place a probe actually gets constructed |
-| `probe_selector.py` | `ProbeSelector` + `DEFAULT_PROBE_MAPPING`: resolves a vulnerability id into a filtered, deterministically-sorted probe list |
-| `mapper.py` | `garak_prompts_to_attacks()`: converts one probe's raw `.prompts` entries into `Attack` objects |
-| `generator.py` | `GarakAttackGenerator` (the only `@GENERATORS.register` in this package) |
+| `probe_selector.py` | `ProbeSelector` + `DEFAULT_PROBE_MAPPING`: resolves a vulnerability id into a filtered, deterministically-sorted probe list                                                                                                                                                                                            |
+| `mapper.py`         | `garak_prompts_to_attacks()`: converts one probe's raw `.prompts` entries into `Attack` objects                                                                                                                                                                                                                        |
+| `generator.py`      | `GarakAttackGenerator` (the only `@GENERATORS.register` in this package)                                                                                                                                                                                                                                               |
 
 **Only this package imports `garak`, and even here the import is lazy** (inside
 `ProbeRegistry`'s methods, never at module scope) — so
@@ -466,15 +466,15 @@ and `exclude_tags`. `DEFAULT_PROBE_MAPPING` (in `probe_selector.py`) is a best-e
 point built from real Garak module names verified against Garak's source at integration time —
 **not** an authoritative mapping published by Garak itself (no such canonical mapping exists):
 
-| Vulnerability id | Default probe pattern(s) | Confidence |
-|---|---|---|
-| `prompt_injection` | `promptinject.*`, `latentinjection.*` | direct match |
-| `jailbreak` | `dan.*`, `encoding.*`, `suffix.*`, `grandma.*`, `dra.*` | direct match |
-| `prompt_leakage` | `leakreplay.*`, `sysprompt_extraction.*`, `divergence.*` | direct match |
-| `pii_leakage` | `leakreplay.*` | **approximate** — no dedicated Garak PII module exists |
-| `secret_leakage` | `apikey.*` | direct match |
-| `tool_misuse` | `exploitation.*`, `packagehallucination.*` | **approximate** — no dedicated Garak "excessive agency" module exists |
-| `hateful_content` | `donotanswer.*` | direct match — toxic/discriminatory/hateful/offensive content refusal testing |
+| Vulnerability id   | Default probe pattern(s)                                 | Confidence                                                                    |
+| ------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `prompt_injection` | `promptinject.*`, `latentinjection.*`                    | direct match                                                                  |
+| `jailbreak`        | `dan.*`, `encoding.*`, `suffix.*`, `grandma.*`, `dra.*`  | direct match                                                                  |
+| `prompt_leakage`   | `leakreplay.*`, `sysprompt_extraction.*`, `divergence.*` | direct match                                                                  |
+| `pii_leakage`      | `leakreplay.*`                                           | **approximate** — no dedicated Garak PII module exists                        |
+| `secret_leakage`   | `apikey.*`                                               | direct match                                                                  |
+| `tool_misuse`      | `exploitation.*`, `packagehallucination.*`               | **approximate** — no dedicated Garak "excessive agency" module exists         |
+| `hateful_content`  | `donotanswer.*`                                          | direct match — toxic/discriminatory/hateful/offensive content refusal testing |
 
 Override or extend this entirely from YAML via the `probe_mapping` param (see the config example
 below) — nothing here is baked into `if vulnerability.id == ...:` branching logic.
@@ -524,57 +524,57 @@ generator:
     include_tags: [owasp:llm01]
     exclude_tags: [deprecated]
     max_attacks: 100
-    probe_mapping:              # optional: overrides DEFAULT_PROBE_MAPPING
+    probe_mapping: # optional: overrides DEFAULT_PROBE_MAPPING
       jailbreak:
         include_patterns: [dan.*, encoding.*]
 ```
 
 ### 8.2 Targets (`adapters.targets`)
 
-| Name | Status | Notes |
-|------|--------|-------|
-| `mock` | **Functional** | Canned response; no network |
-| `callback` | **Functional** | User-supplied Python callable |
-| `openai` | **Functional** | Optional extra: `openai`; calls the Responses API |
-| `anthropic` | Stub | Optional extra: `anthropic` |
-| `http` | Stub | Optional extra: `httpx` |
-| `local_model` | Stub | Local transformers / vLLM / llama.cpp |
-| `langgraph` | Stub | Optional extra: `langgraph` |
+| Name          | Status         | Notes                                             |
+| ------------- | -------------- | ------------------------------------------------- |
+| `mock`        | **Functional** | Canned response; no network                       |
+| `callback`    | **Functional** | User-supplied Python callable                     |
+| `openai`      | **Functional** | Optional extra: `openai`; calls the Responses API |
+| `anthropic`   | Stub           | Optional extra: `anthropic`                       |
+| `http`        | Stub           | Optional extra: `httpx`                           |
+| `local_model` | Stub           | Local transformers / vLLM / llama.cpp             |
+| `langgraph`   | Stub           | Optional extra: `langgraph`                       |
 
 ### 8.3 Evaluators (`adapters.evaluators`)
 
-| Name | Status | Notes |
-|------|--------|-------|
-| `dummy` | **Functional** | Refusal-keyword match grader |
+| Name         | Status         | Notes                                                                                                    |
+| ------------ | -------------- | -------------------------------------------------------------------------------------------------------- |
+| `dummy`      | **Functional** | Refusal-keyword match grader                                                                             |
 | `rule_based` | **Functional** | Runs every registered `Policy` (§8.4) against the pair; falls back to refusal-keyword match if none fire |
-| `llm_judge` | **Functional** | LLM-as-judge (OpenAI Responses API); optional extra: `openai` |
+| `llm_judge`  | **Functional** | LLM-as-judge (OpenAI Responses API); optional extra: `openai`                                            |
 
 ### 8.4 Policies (`adapters.policies`)
 
 All **functional**, rule/regex-based (no LLM judge):
 
-| Name | Severity | Detects |
-|------|----------|---------|
-| `prompt_leak` | high | System-prompt / instruction disclosure phrases |
-| `pii_leak` | high | Email, SSN, phone, credit-card patterns |
-| `secret_leak` | critical | API keys, private keys, tokens, secret assignments |
-| `tool_misuse` | high | Destructive shell, sensitive paths, shell tool-calls, etc. |
+| Name          | Severity | Detects                                                    |
+| ------------- | -------- | ---------------------------------------------------------- |
+| `prompt_leak` | high     | System-prompt / instruction disclosure phrases             |
+| `pii_leak`    | high     | Email, SSN, phone, credit-card patterns                    |
+| `secret_leak` | critical | API keys, private keys, tokens, secret assignments         |
+| `tool_misuse` | high     | Destructive shell, sensitive paths, shell tool-calls, etc. |
 
 ### 8.5 Storage (`adapters.storage`)
 
-| Name | Status |
-|------|--------|
+| Name        | Status         |
+| ----------- | -------------- |
 | `in_memory` | **Functional** |
-| `sqlite` | Stub |
+| `sqlite`    | Stub           |
 
 ### 8.6 Reporting (`adapters.reporting`)
 
-| Name | Status |
-|------|--------|
-| `console` | **Functional** |
-| `json` | **Functional** (writes to path) |
-| `html` | **Functional** (writes a standalone HTML page to path) |
-| `markdown` | Stub |
+| Name       | Status                                                 |
+| ---------- | ------------------------------------------------------ |
+| `console`  | **Functional**                                         |
+| `json`     | **Functional** (writes to path)                        |
+| `html`     | **Functional** (writes a standalone HTML page to path) |
+| `markdown` | Stub                                                   |
 
 ---
 
@@ -607,21 +607,21 @@ campaign YAML today; policy runs are programmatic via `PolicyEngine`.
 ### 9.3 CLI (`cli.main`)
 
 ```text
-llm-redteam-firewall run --config <path>
+llm-redteam run --config <path>
 ```
 
 - Thin argparse wrapper
 - Exit codes: `0` clean, `1` vulnerable findings present, `2` config/plugin error
-- Entry point: `llm-redteam-firewall` → `llm_redteam_firewall.cli.main:main`
+- Entry point: `llm-redteam` → `llm_redteam_firewall.cli.main:main`
 
 ### 9.4 Example YAML shape
 
 ```yaml
 name: example-campaign
-generator:  { type: dummy }
-target:     { type: mock, params: { canned_response: "..." } }
-evaluator:  { type: dummy }
-storage:    { type: in_memory }
+generator: { type: dummy }
+target: { type: mock, params: { canned_response: "..." } }
+evaluator: { type: dummy }
+storage: { type: in_memory }
 reporters:
   - { type: console }
   - { type: json, params: { output_path: build/results.json } }
@@ -685,24 +685,24 @@ sequenceDiagram
 
 ### Functional today (no external services)
 
-- Pipeline: generate → execute → evaluate → store → report  
+- Pipeline: generate → execute → evaluate → store → report
 - Adapters: `dummy`/`garak` generators (`garak` requires the `garak` extra — §8.1a), `mock`/`callback`
-  targets, `dummy`/`rule_based` evaluators, `in_memory` storage, `console`/`json`/`html` reporters  
-- Policies: all four rule-based policies + `PolicyEngine`  
-- CLI + YAML config + example script  
+  targets, `dummy`/`rule_based` evaluators, `in_memory` storage, `console`/`json`/`html` reporters
+- Policies: all four rule-based policies + `PolicyEngine`
+- CLI + YAML config + example script
 
 ### Stubs (`NotImplementedError`, already registered)
 
-| Extension | Location |
-|-----------|----------|
-| `OpenAITarget` / `AnthropicTarget` | `adapters/targets/` |
-| `HTTPTarget` | `adapters/targets/http_target.py` |
-| `LocalModelTarget` | `adapters/targets/local_model_target.py` |
-| `LangGraphTarget` | `adapters/targets/langgraph_target.py` |
-| `LLMJudgeEvaluator` | `adapters/evaluators/llm_judge_evaluator.py` |
-| `SQLiteStorage` | `adapters/storage/sqlite_storage.py` |
-| `MarkdownReporter` | `adapters/reporting/markdown_reporter.py` |
-| LLM-backed `Policy` | not started (rule-based only) |
+| Extension                          | Location                                     |
+| ---------------------------------- | -------------------------------------------- |
+| `OpenAITarget` / `AnthropicTarget` | `adapters/targets/`                          |
+| `HTTPTarget`                       | `adapters/targets/http_target.py`            |
+| `LocalModelTarget`                 | `adapters/targets/local_model_target.py`     |
+| `LangGraphTarget`                  | `adapters/targets/langgraph_target.py`       |
+| `LLMJudgeEvaluator`                | `adapters/evaluators/llm_judge_evaluator.py` |
+| `SQLiteStorage`                    | `adapters/storage/sqlite_storage.py`         |
+| `MarkdownReporter`                 | `adapters/reporting/markdown_reporter.py`    |
+| LLM-backed `Policy`                | not started (rule-based only)                |
 
 ### How to add a new adapter (any port)
 
@@ -746,12 +746,12 @@ custom_fuzzer = "my_pkg.generator:CustomFuzzingGenerator"
 
 ### Natural future work
 
-| Idea | Where it would land |
-|------|---------------------|
+| Idea                                                            | Where it would land                           |
+| --------------------------------------------------------------- | --------------------------------------------- |
 | Wire `PolicyEngine` into `CampaignOrchestrator` after execution | `application`, optional YAML keys in `config` |
-| Retry / backoff around target calls | `ExecutionEngine` |
-| Multi-turn attacks (`turns: list[str]`) | `Attack` model + every `Target` |
-| Import-boundary enforcement in CI | `import-linter` / similar |
+| Retry / backoff around target calls                             | `ExecutionEngine`                             |
+| Multi-turn attacks (`turns: list[str]`)                         | `Attack` model + every `Target`               |
+| Import-boundary enforcement in CI                               | `import-linter` / similar                     |
 
 ---
 
@@ -759,15 +759,15 @@ custom_fuzzer = "my_pkg.generator:CustomFuzzingGenerator"
 
 Path: `tests/` (mirrors source packages)
 
-| Area | What is covered |
-|------|-----------------|
-| `tests/domain/` | Model immutability, helpers, invariants |
-| `tests/domain/ports/` | ABC contracts (cannot instantiate incomplete subclasses) |
-| `tests/application/` | Orchestrator + all three engines |
-| `tests/adapters/` | Functional adapters + policy rule positive/negative cases |
-| `tests/plugins/` | `Registry` + `PolicyRegistry` |
-| `tests/config/` | YAML load + DI wiring |
-| `conftest.py` | Imports `adapters` once so plugins are registered |
+| Area                  | What is covered                                           |
+| --------------------- | --------------------------------------------------------- |
+| `tests/domain/`       | Model immutability, helpers, invariants                   |
+| `tests/domain/ports/` | ABC contracts (cannot instantiate incomplete subclasses)  |
+| `tests/application/`  | Orchestrator + all three engines                          |
+| `tests/adapters/`     | Functional adapters + policy rule positive/negative cases |
+| `tests/plugins/`      | `Registry` + `PolicyRegistry`                             |
+| `tests/config/`       | YAML load + DI wiring                                     |
+| `conftest.py`         | Imports `adapters` once so plugins are registered         |
 
 Tooling:
 
@@ -780,13 +780,13 @@ Tooling:
 
 ## 12. Runtime & packaging
 
-| Item | Detail |
-|------|--------|
-| Python | `>=3.12` |
-| Core deps | `pydantic`, `PyYAML` |
+| Item            | Detail                                                         |
+| --------------- | -------------------------------------------------------------- |
+| Python          | `>=3.12`                                                       |
+| Core deps       | `pydantic`, `PyYAML`                                           |
 | Optional extras | `openai`, `anthropic`, `http`, `langgraph` (for stub adapters) |
-| Install | `pip install -e ".[dev]"` or `make install-dev` |
-| Package layout | `src/` layout via setuptools |
+| Install         | `pip install -e ".[dev]"` or `make install-dev`                |
+| Package layout  | `src/` layout via setuptools                                   |
 
 ---
 

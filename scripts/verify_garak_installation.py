@@ -21,15 +21,15 @@ import argparse
 import sys
 from importlib import metadata as importlib_metadata
 
-from llm_redteam_firewall.adapters.generators.garak.generator import GarakAttackGenerator
-from llm_redteam_firewall.adapters.generators.garak.models import GarakProbeInfo
-from llm_redteam_firewall.adapters.generators.garak.probe_registry import (
+from llm_redteam.adapters.generators.garak.generator import GarakAttackGenerator
+from llm_redteam.adapters.generators.garak.models import GarakProbeInfo
+from llm_redteam.adapters.generators.garak.probe_registry import (
     GarakNotInstalledError,
     ProbeRegistry,
 )
-from llm_redteam_firewall.adapters.generators.garak.probe_selector import ProbeSelector
-from llm_redteam_firewall.domain.models import Attack, Vulnerability
-from llm_redteam_firewall.domain.vulnerabilities import VULNERABILITY_REGISTRY, to_vulnerability
+from llm_redteam.adapters.generators.garak.probe_selector import ProbeSelector
+from llm_redteam.domain.models import Attack, Vulnerability
+from llm_redteam.domain.vulnerabilities import VULNERABILITY_REGISTRY, to_vulnerability
 
 DEFAULT_MAX_ATTACKS_PER_VULNERABILITY = 20
 
@@ -60,7 +60,7 @@ def section_environment() -> bool:
         print(f"  Import error: {exc}")
         print()
         print("Garak is not installed in this environment.")
-        print("Install it with: pip install 'llm-redteam-firewall[garak]'")
+        print("Install it with: pip install 'llm-redteam[garak]'")
         return False
 
     try:

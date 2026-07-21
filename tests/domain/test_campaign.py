@@ -6,7 +6,7 @@ import dataclasses
 
 import pytest
 
-from llm_redteam_firewall.domain.models import Campaign, Vulnerability
+from llm_redteam.domain.models import Campaign, Vulnerability
 
 
 def test_defaults(vulnerability: Vulnerability) -> None:

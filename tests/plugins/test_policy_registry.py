@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from llm_redteam_firewall.domain.errors import PluginNotFoundError
-from llm_redteam_firewall.domain.models import Attack, Finding, Response
-from llm_redteam_firewall.domain.ports import Policy
-from llm_redteam_firewall.plugins import POLICIES
-from llm_redteam_firewall.plugins.policy_registry import PolicyRegistry
+from llm_redteam.domain.errors import PluginNotFoundError
+from llm_redteam.domain.models import Attack, Finding, Response
+from llm_redteam.domain.ports import Policy
+from llm_redteam.plugins import POLICIES
+from llm_redteam.plugins.policy_registry import PolicyRegistry
 
 
 class _NamedPolicy(Policy):

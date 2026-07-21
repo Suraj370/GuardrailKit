@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from llm_redteam_firewall.domain.models import AttackResult, Response
+from llm_redteam.domain.models import AttackResult, Response
 
 
 def test_succeeded_when_no_error() -> None:

@@ -8,7 +8,7 @@ from datetime import datetime
 
 import pytest
 
-from llm_redteam_firewall.domain.models import (
+from llm_redteam.domain.models import (
     Attack,
     AttackResult,
     Finding,

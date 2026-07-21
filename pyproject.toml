@@ -3,13 +3,13 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "llm-redteam-firewall"
+name = "llm-redteam"
 version = "0.1.0"
 description = "A pluggable, hexagonal-architecture LLM red-team harness."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
-authors = [{ name = "llm-redteam-firewall contributors" }]
+authors = [{ name = "llm-redteam contributors" }]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -33,7 +33,7 @@ dev = [
 ]
 # Extras for adapters that are currently scaffold stubs. Installing one
 # of these does not, by itself, implement the adapter — see the
-# NotImplementedError bodies in src/llm_redteam_firewall/adapters/.
+# NotImplementedError bodies in src/llm_redteam/adapters/.
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.30"]
 http = ["httpx>=0.27"]
@@ -44,11 +44,11 @@ langgraph = ["langgraph>=0.2"]
 garak = ["garak>=0.13"]
 
 [project.scripts]
-llm-redteam-firewall = "llm_redteam_firewall.cli.main:main"
+llm-redteam = "llm_redteam.cli.main:main"
 
 [project.urls]
-Homepage = "https://github.com/surajpanda186/llm-redteam-firewall"
-Repository = "https://github.com/surajpanda186/llm-redteam-firewall"
+Homepage = "https://github.com/surajpanda186/llm-redteam"
+Repository = "https://github.com/surajpanda186/llm-redteam"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -76,12 +76,12 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["llm_redteam_firewall"]
+known-first-party = ["llm_redteam"]
 
 [tool.mypy]
 python_version = "3.12"
 mypy_path = "src"
-packages = ["llm_redteam_firewall"]
+packages = ["llm_redteam"]
 strict = true
 warn_unused_ignores = true
 disallow_untyped_defs = true

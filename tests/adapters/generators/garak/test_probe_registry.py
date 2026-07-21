@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from llm_redteam_firewall.adapters.generators.garak.probe_registry import (
+from llm_redteam.adapters.generators.garak.probe_registry import (
     GarakNotInstalledError,
     ProbeRegistry,
 )
-from llm_redteam_firewall.domain.errors import ConfigurationError
+from llm_redteam.domain.errors import ConfigurationError
 
 
 def test_list_probes_discovers_via_enumerate_plugins_no_hardcoded_names(fake_garak: None) -> None:

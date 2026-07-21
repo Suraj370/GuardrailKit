@@ -6,9 +6,9 @@ from unittest.mock import patch
 
 import pytest
 
-from llm_redteam_firewall.application import ExecutionEngine
-from llm_redteam_firewall.domain.errors import TargetExecutionError
-from llm_redteam_firewall.domain.models import Attack, AttackResult, ExecutionContext
+from llm_redteam.application import ExecutionEngine
+from llm_redteam.domain.errors import TargetExecutionError
+from llm_redteam.domain.models import Attack, AttackResult, ExecutionContext
 
 
 class _EchoTarget:
@@ -82,7 +82,7 @@ async def test_retries_recover_from_a_transient_failure() -> None:
     target = _FlakyTarget(fail_times=2)
     engine = ExecutionEngine(target=target, concurrency=1, max_retries=2, retry_backoff_seconds=0.0)
 
-    with patch("llm_redteam_firewall.application.execution_engine.asyncio.sleep"):
+    with patch("llm_redteam.application.execution_engine.asyncio.sleep"):
         [result] = await engine.run("campaign-1", _attacks(1))
 
     assert result.succeeded is True
@@ -95,7 +95,7 @@ async def test_retries_are_capped_at_max_retries() -> None:
     target = _CountingFailingTarget()
     engine = ExecutionEngine(target=target, concurrency=1, max_retries=2, retry_backoff_seconds=0.0)
 
-    with patch("llm_redteam_firewall.application.execution_engine.asyncio.sleep"):
+    with patch("llm_redteam.application.execution_engine.asyncio.sleep"):
         [result] = await engine.run("campaign-1", _attacks(1))
 
     assert result.succeeded is False

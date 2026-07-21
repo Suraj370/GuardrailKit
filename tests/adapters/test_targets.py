@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from llm_redteam_firewall.adapters.targets.callback_target import CallbackTarget
-from llm_redteam_firewall.adapters.targets.mock_target import MockTarget
-from llm_redteam_firewall.adapters.targets.openai_target import OpenAINotInstalledError, OpenAITarget
-from llm_redteam_firewall.domain.models import Attack, ExecutionContext
+from llm_redteam.adapters.targets.callback_target import CallbackTarget
+from llm_redteam.adapters.targets.mock_target import MockTarget
+from llm_redteam.adapters.targets.openai_target import OpenAINotInstalledError, OpenAITarget
+from llm_redteam.domain.models import Attack, ExecutionContext
 
 
 def _attack() -> Attack:
@@ -124,7 +124,7 @@ async def test_callback_target_measures_latency_on_success() -> None:
     target = CallbackTarget(callback=lambda prompt: "ok")
     ctx = ExecutionContext(campaign_name="c1")
 
-    with patch("llm_redteam_firewall.adapters.targets.callback_target.time.perf_counter", _fake_perf_counter):
+    with patch("llm_redteam.adapters.targets.callback_target.time.perf_counter", _fake_perf_counter):
         result = await target.execute(ctx, _attack())
 
     assert result.latency_ms == pytest.approx(250.0)
@@ -143,7 +143,7 @@ async def test_callback_target_measures_latency_on_error() -> None:
     target = CallbackTarget(callback=_boom)
     ctx = ExecutionContext(campaign_name="c1")
 
-    with patch("llm_redteam_firewall.adapters.targets.callback_target.time.perf_counter", _fake_perf_counter):
+    with patch("llm_redteam.adapters.targets.callback_target.time.perf_counter", _fake_perf_counter):
         result = await target.execute(ctx, _attack())
 
     assert result.latency_ms == pytest.approx(100.0)
@@ -219,7 +219,7 @@ async def test_openai_target_measures_latency_on_success() -> None:
     )
     ctx = ExecutionContext(campaign_name="c1")
 
-    with patch("llm_redteam_firewall.adapters.targets.openai_target.time.perf_counter", _fake_perf_counter):
+    with patch("llm_redteam.adapters.targets.openai_target.time.perf_counter", _fake_perf_counter):
         result = await target.execute(ctx, _attack())
 
     assert result.latency_ms == pytest.approx(300.0)
@@ -236,7 +236,7 @@ async def test_openai_target_measures_latency_on_error() -> None:
     target._client.responses.create = AsyncMock(side_effect=RuntimeError("boom"))
     ctx = ExecutionContext(campaign_name="c1")
 
-    with patch("llm_redteam_firewall.adapters.targets.openai_target.time.perf_counter", _fake_perf_counter):
+    with patch("llm_redteam.adapters.targets.openai_target.time.perf_counter", _fake_perf_counter):
         result = await target.execute(ctx, _attack())
 
     assert result.latency_ms == pytest.approx(200.0)

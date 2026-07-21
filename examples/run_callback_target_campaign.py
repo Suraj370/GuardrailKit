@@ -10,7 +10,7 @@ has no YAML representation, so CallbackTarget is always constructed in
 code.
 
 Requires:
-    pip install 'llm-redteam-firewall[openai]'
+    pip install 'llm-redteam[openai]'
     OPENAI_API_KEY set in the environment, or in a .env file in the
     working directory (loaded automatically via python-dotenv)
 
@@ -24,11 +24,11 @@ import asyncio
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from llm_redteam_firewall import adapters  # noqa: F401  (registers in-tree plugins)
-from llm_redteam_firewall.adapters.targets.callback_target import CallbackTarget
-from llm_redteam_firewall.application import CampaignOrchestrator, EvaluationEngine, ExecutionEngine
-from llm_redteam_firewall.domain.models import Campaign, Severity, Vulnerability
-from llm_redteam_firewall.plugins import EVALUATORS, GENERATORS, REPORTERS, STORAGE
+from llm_redteam import adapters  # noqa: F401  (registers in-tree plugins)
+from llm_redteam.adapters.targets.callback_target import CallbackTarget
+from llm_redteam.application import CampaignOrchestrator, EvaluationEngine, ExecutionEngine
+from llm_redteam.domain.models import Campaign, Severity, Vulnerability
+from llm_redteam.plugins import EVALUATORS, GENERATORS, REPORTERS, STORAGE
 
 load_dotenv()  # populates os.environ from a .env file, if present, before the OpenAI client reads it
 

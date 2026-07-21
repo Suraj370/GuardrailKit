@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from llm_redteam_firewall.adapters.reporting.html_report import (
+from llm_redteam.adapters.reporting.html_report import (
     prepare_report_data,
     render_html,
 )
-from llm_redteam_firewall.adapters.reporting.html_report.data import resolve_severity
-from llm_redteam_firewall.adapters.reporting.html_reporter import HTMLReporter
-from llm_redteam_firewall.domain.models import (
+from llm_redteam.adapters.reporting.html_report.data import resolve_severity
+from llm_redteam.adapters.reporting.html_reporter import HTMLReporter
+from llm_redteam.domain.models import (
     Attack,
     AttackResult,
     Finding,
@@ -196,7 +196,7 @@ def test_resolve_severity_prefers_finding_then_metadata_aliases() -> None:
 
     # When metadata carries a recognized alias and is consulted after Severity enums,
     # unknown raw strings still fall through to medium default via helper.
-    from llm_redteam_firewall.adapters.reporting.html_report.data import _SEVERITY_ALIASES
+    from llm_redteam.adapters.reporting.html_report.data import _SEVERITY_ALIASES
 
     assert _SEVERITY_ALIASES["info"] == "informational"
     assert _SEVERITY_ALIASES["crit"] == "critical"

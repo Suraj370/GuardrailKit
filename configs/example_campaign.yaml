@@ -1,6 +1,6 @@
 # Example campaign config, runnable with no external dependencies:
 #
-#   llm-redteam-firewall run --config configs/example_campaign.yaml
+#   llm-redteam run --config configs/example_campaign.yaml
 #
 # Swapping to a real target/generator later (once implemented) is a
 # matter of changing `type:` and `params:` below — no code changes.

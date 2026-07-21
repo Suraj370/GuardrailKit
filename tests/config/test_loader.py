@@ -6,14 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from llm_redteam_firewall.config import (
+from llm_redteam.config import (
     CampaignConfig,
     build_campaign_runner,
     load_campaign_config,
     load_campaign_runner,
 )
-from llm_redteam_firewall.domain.errors import ConfigurationError
-from llm_redteam_firewall.domain.vulnerabilities import VULNERABILITY_REGISTRY
+from llm_redteam.domain.errors import ConfigurationError
+from llm_redteam.domain.vulnerabilities import VULNERABILITY_REGISTRY
 
 _EXAMPLE_CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "example_campaign.yaml"
 

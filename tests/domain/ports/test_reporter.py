@@ -6,9 +6,9 @@ from datetime import UTC, datetime
 
 import pytest
 
-from llm_redteam_firewall.adapters.reporting.console_reporter import ConsoleReporter
-from llm_redteam_firewall.domain.models import Report
-from llm_redteam_firewall.domain.ports import Reporter
+from llm_redteam.adapters.reporting.console_reporter import ConsoleReporter
+from llm_redteam.domain.models import Report
+from llm_redteam.domain.ports import Reporter
 
 
 def _report() -> Report:

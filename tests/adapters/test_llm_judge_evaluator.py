@@ -8,11 +8,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from llm_redteam_firewall.adapters.evaluators.llm_judge_evaluator import (
+from llm_redteam.adapters.evaluators.llm_judge_evaluator import (
     LLMJudgeEvaluator,
     OpenAINotInstalledError,
 )
-from llm_redteam_firewall.domain.models import Attack, AttackResult, Severity, Vulnerability
+from llm_redteam.domain.models import Attack, AttackResult, Severity, Vulnerability
 
 
 def _vulnerability() -> Vulnerability:

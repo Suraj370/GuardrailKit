@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from llm_redteam_firewall.adapters.policies.prompt_leak_policy import PromptLeakPolicy
-from llm_redteam_firewall.domain.models import Attack, Finding, Response
-from llm_redteam_firewall.domain.ports import Policy
+from llm_redteam.adapters.policies.prompt_leak_policy import PromptLeakPolicy
+from llm_redteam.domain.models import Attack, Finding, Response
+from llm_redteam.domain.ports import Policy
 
 
 def test_cannot_instantiate_the_interface_directly() -> None:

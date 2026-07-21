@@ -1,21 +1,22 @@
-# llm-redteam-firewall
+# llm-redteam
 
-A pluggable, hexagonal-architecture LLM red-team harness that  runs security-style attack campaigns against LLM apps, grades the responses, stores findings, and reports them.
+A pluggable, hexagonal-architecture LLM red-team harness that runs security-style attack campaigns against LLM apps, grades the responses, stores findings, and reports them.
+
 > **Status:** scaffold. Interfaces, domain models, plugin registry, wiring,
 > and reference (dummy/mock) implementations are in place and tested. The
 > Garak-backed `AttackGenerator` is a real integration (requires the
 > `garak` extra) — see `ARCHITECTURE.md` § 8.1a. Other real integrations
 > (OpenAI, Anthropic, HTTP, local models, LangGraph agents, an LLM-judge
 > evaluator) are intentionally left as `NotImplementedError` stubs — see
-> `ARCHITECTURE.md` → *Future extension points*.
+> `ARCHITECTURE.md` → _Future extension points_.
 
 ## Why this exists
 
 Red-teaming an LLM application means running the same shape of pipeline
-against wildly different things: different *targets* (a hosted API, an
-in-house agent, a RAG pipeline), different *attack sources* (static
+against wildly different things: different _targets_ (a hosted API, an
+in-house agent, a RAG pipeline), different _attack sources_ (static
 prompts, a fuzzing library, an LLM-driven mutator), and different
-*graders* (keyword rules, a judge model, a classifier). This framework
+_graders_ (keyword rules, a judge model, a classifier). This framework
 treats all three as swappable plugins behind narrow interfaces, so the
 orchestration logic — "for each vulnerability, generate attacks, run
 them, grade them, record findings, report" — never has to change.
@@ -50,24 +51,24 @@ adapters: `DummyAttackGenerator`, `MockTarget`, `DummyEvaluator`,
 
 ## Package layout
 
-| Package                          | Responsibility                                                                 | Depends on |
-|-----------------------------------|---------------------------------------------------------------------------------|------------|
-| `domain.models`                   | Entities/value objects: `Campaign`, `Vulnerability`, `Attack`, `AttackResult`, `Response`, `EvaluationResult`, `Finding`, `Report` | *(nothing)* |
-| `domain.ports`                    | Interfaces (`ABC`/`Protocol`): `AttackGenerator`, `Target`, `Evaluator`, `Policy`, `FindingsStorage`, `Reporter` | `domain.models` |
-| `domain.errors`                   | Shared exception hierarchy                                                     | *(nothing)* |
-| `domain.vulnerabilities`          | `VulnerabilityDefinition` catalog + `VulnerabilityRegistry` (`VULNERABILITY_REGISTRY`), `to_vulnerability(...)` — lets a campaign reference a vulnerability by id instead of inlining its generator/categories/policies | `domain.models`, `domain.errors` |
-| `domain.campaigns`                | `AttackCampaign`/`AttackBatch` planning layer between `AttackGenerator` output and `ExecutionEngine` (declared, not-yet-enforced execution strategy/retry/concurrency) | `domain.models` |
-| `application`                     | Use cases: `CampaignOrchestrator`, `ExecutionEngine`, `EvaluationEngine`, `PolicyEngine` | `domain` |
-| `application.policy_engine`       | `PolicyEngine`: runs every registered `Policy` over an attack/response pair, aggregating multi-rule findings (symmetric to `EvaluationEngine`, but many-to-one) | `domain` |
-| `adapters.generators`             | `AttackGenerator` implementations: `dummy`, plus `garak` (subpackage, reads Garak's probe corpus; requires the `garak` extra) | `domain`, `plugins`, `garak` lazily |
-| `adapters.targets`                | `Target` implementations (`mock`, `callback`, `openai`/`anthropic`/`http`/`local_model`/`langgraph` stubs) | `domain`, `plugins` |
-| `adapters.evaluators`             | `Evaluator` implementations (`dummy`, `rule_based`, `llm_judge` stub)            | `domain`, `plugins` |
-| `adapters.policies`               | Rule-based `Policy` implementations (`prompt_leak`, `pii_leak`, `secret_leak`, `tool_misuse`) | `domain`, `plugins` |
-| `adapters.storage`                | `FindingsStorage` implementations (`in_memory`, `sqlite` stub)                  | `domain`, `plugins` |
-| `adapters.reporting`              | `Reporter` implementations (`console`, `json`, `html`, `markdown` stub)          | `domain`, `plugins` |
-| `plugins`                         | Factory `Registry` per port + `PolicyRegistry` for multi-rule policy runs       | `domain.ports` |
-| `config`                          | Pydantic YAML schema + the DI **composition root** (`build_campaign_runner`)    | everything |
-| `cli`                             | `llm-redteam-firewall run --config <file>`                                      | `config` |
+| Package                     | Responsibility                                                                                                                                                                                                          | Depends on                          |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `domain.models`             | Entities/value objects: `Campaign`, `Vulnerability`, `Attack`, `AttackResult`, `Response`, `EvaluationResult`, `Finding`, `Report`                                                                                      | _(nothing)_                         |
+| `domain.ports`              | Interfaces (`ABC`/`Protocol`): `AttackGenerator`, `Target`, `Evaluator`, `Policy`, `FindingsStorage`, `Reporter`                                                                                                        | `domain.models`                     |
+| `domain.errors`             | Shared exception hierarchy                                                                                                                                                                                              | _(nothing)_                         |
+| `domain.vulnerabilities`    | `VulnerabilityDefinition` catalog + `VulnerabilityRegistry` (`VULNERABILITY_REGISTRY`), `to_vulnerability(...)` — lets a campaign reference a vulnerability by id instead of inlining its generator/categories/policies | `domain.models`, `domain.errors`    |
+| `domain.campaigns`          | `AttackCampaign`/`AttackBatch` planning layer between `AttackGenerator` output and `ExecutionEngine` (declared, not-yet-enforced execution strategy/retry/concurrency)                                                  | `domain.models`                     |
+| `application`               | Use cases: `CampaignOrchestrator`, `ExecutionEngine`, `EvaluationEngine`, `PolicyEngine`                                                                                                                                | `domain`                            |
+| `application.policy_engine` | `PolicyEngine`: runs every registered `Policy` over an attack/response pair, aggregating multi-rule findings (symmetric to `EvaluationEngine`, but many-to-one)                                                         | `domain`                            |
+| `adapters.generators`       | `AttackGenerator` implementations: `dummy`, plus `garak` (subpackage, reads Garak's probe corpus; requires the `garak` extra)                                                                                           | `domain`, `plugins`, `garak` lazily |
+| `adapters.targets`          | `Target` implementations (`mock`, `callback`, `openai`/`anthropic`/`http`/`local_model`/`langgraph` stubs)                                                                                                              | `domain`, `plugins`                 |
+| `adapters.evaluators`       | `Evaluator` implementations (`dummy`, `rule_based`, `llm_judge` stub)                                                                                                                                                   | `domain`, `plugins`                 |
+| `adapters.policies`         | Rule-based `Policy` implementations (`prompt_leak`, `pii_leak`, `secret_leak`, `tool_misuse`)                                                                                                                           | `domain`, `plugins`                 |
+| `adapters.storage`          | `FindingsStorage` implementations (`in_memory`, `sqlite` stub)                                                                                                                                                          | `domain`, `plugins`                 |
+| `adapters.reporting`        | `Reporter` implementations (`console`, `json`, `html`, `markdown` stub)                                                                                                                                                 | `domain`, `plugins`                 |
+| `plugins`                   | Factory `Registry` per port + `PolicyRegistry` for multi-rule policy runs                                                                                                                                               | `domain.ports`                      |
+| `config`                    | Pydantic YAML schema + the DI **composition root** (`build_campaign_runner`)                                                                                                                                            | everything                          |
+| `cli`                       | `llm-redteam run --config <file>`                                                                                                                                                                                       | `config`                            |
 
 Full dependency-direction diagram, sequence diagram, and extension-point
 details: see [`ARCHITECTURE.md`](ARCHITECTURE.md).

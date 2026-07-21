@@ -7,9 +7,9 @@ Campaign -> Vulnerability -> AttackGenerator -> Target -> Evaluator -> Reporter
 implementations, so it runs with no external dependencies, API keys,
 or network access.
 
-For the equivalent YAML-driven flow (what ``llm-redteam-firewall run``
+For the equivalent YAML-driven flow (what ``llm-redteam run``
 uses), see ``configs/example_campaign.yaml`` and
-``llm_redteam_firewall.config.load_campaign_runner``.
+``llm_redteam.config.load_campaign_runner``.
 
 Run with:  python examples/run_example_campaign.py
 """
@@ -18,10 +18,10 @@ from __future__ import annotations
 
 import asyncio
 
-from llm_redteam_firewall import adapters  # noqa: F401  (registers in-tree plugins)
-from llm_redteam_firewall.application import CampaignOrchestrator, EvaluationEngine, ExecutionEngine
-from llm_redteam_firewall.domain.models import Campaign, Severity, Vulnerability
-from llm_redteam_firewall.plugins import EVALUATORS, GENERATORS, REPORTERS, STORAGE, TARGETS
+from llm_redteam import adapters  # noqa: F401  (registers in-tree plugins)
+from llm_redteam.application import CampaignOrchestrator, EvaluationEngine, ExecutionEngine
+from llm_redteam.domain.models import Campaign, Severity, Vulnerability
+from llm_redteam.plugins import EVALUATORS, GENERATORS, REPORTERS, STORAGE, TARGETS
 
 
 async def main() -> None:

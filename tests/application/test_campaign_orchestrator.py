@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from llm_redteam_firewall.application import CampaignOrchestrator, EvaluationEngine, ExecutionEngine
-from llm_redteam_firewall.domain.models import (
+from llm_redteam.application import CampaignOrchestrator, EvaluationEngine, ExecutionEngine
+from llm_redteam.domain.models import (
     Attack,
     AttackResult,
     Campaign,

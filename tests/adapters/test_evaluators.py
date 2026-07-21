@@ -7,10 +7,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from llm_redteam_firewall.adapters.evaluators.dummy_evaluator import DummyEvaluator
-from llm_redteam_firewall.adapters.evaluators.llm_judge_evaluator import LLMJudgeEvaluator
-from llm_redteam_firewall.adapters.evaluators.rule_based_evaluator import RuleBasedEvaluator
-from llm_redteam_firewall.domain.models import Attack, AttackResult, Vulnerability
+from llm_redteam.adapters.evaluators.dummy_evaluator import DummyEvaluator
+from llm_redteam.adapters.evaluators.llm_judge_evaluator import LLMJudgeEvaluator
+from llm_redteam.adapters.evaluators.rule_based_evaluator import RuleBasedEvaluator
+from llm_redteam.domain.models import Attack, AttackResult, Vulnerability
 
 
 def _attack(vulnerability: Vulnerability) -> Attack:

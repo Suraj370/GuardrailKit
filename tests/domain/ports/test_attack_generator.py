@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from llm_redteam_firewall.adapters.generators.dummy_generator import DummyAttackGenerator
-from llm_redteam_firewall.domain.models import Attack, Vulnerability
-from llm_redteam_firewall.domain.ports import AttackGenerator
+from llm_redteam.adapters.generators.dummy_generator import DummyAttackGenerator
+from llm_redteam.domain.models import Attack, Vulnerability
+from llm_redteam.domain.ports import AttackGenerator
 
 
 def test_cannot_instantiate_the_interface_directly() -> None:

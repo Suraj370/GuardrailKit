@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from llm_redteam_firewall.adapters.policies.pii_leak_policy import PIILeakPolicy
-from llm_redteam_firewall.adapters.policies.prompt_leak_policy import PromptLeakPolicy
-from llm_redteam_firewall.adapters.policies.secret_leak_policy import SecretLeakPolicy
-from llm_redteam_firewall.adapters.policies.tool_misuse_policy import ToolMisusePolicy
-from llm_redteam_firewall.domain.models import Attack, Response, Severity
-from llm_redteam_firewall.domain.ports import Policy
+from llm_redteam.adapters.policies.pii_leak_policy import PIILeakPolicy
+from llm_redteam.adapters.policies.prompt_leak_policy import PromptLeakPolicy
+from llm_redteam.adapters.policies.secret_leak_policy import SecretLeakPolicy
+from llm_redteam.adapters.policies.tool_misuse_policy import ToolMisusePolicy
+from llm_redteam.domain.models import Attack, Response, Severity
+from llm_redteam.domain.ports import Policy
 
 
 def _attack(prompt: str = "probe") -> Attack:

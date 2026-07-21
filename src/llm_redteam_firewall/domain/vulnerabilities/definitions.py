@@ -74,7 +74,7 @@ BUILTIN_VULNERABILITY_DEFINITIONS: tuple[VulnerabilityDefinition, ...] = (
         default_attack_generator="dummy",
         default_attack_categories=("prompt_leakage",),
         default_policies=("prompt_leak",),
-        severity=Severity.HIGH,
+        severity=Severity.MEDIUM,
         tags=("owasp-llm07",),
     ),
     VulnerabilityDefinition(
@@ -113,7 +113,7 @@ BUILTIN_VULNERABILITY_DEFINITIONS: tuple[VulnerabilityDefinition, ...] = (
         default_attack_generator="dummy",
         default_attack_categories=("tool_misuse",),
         default_policies=("tool_misuse",),
-        severity=Severity.HIGH,
+        severity=Severity.CRITICAL,
         tags=("owasp-llm08", "excessive-agency"),
     ),
     VulnerabilityDefinition(

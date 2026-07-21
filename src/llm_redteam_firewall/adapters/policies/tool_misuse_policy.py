@@ -48,6 +48,10 @@ _MISUSE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
         "shell_subprocess_spawn",
         re.compile(r"(?i)\bos\.(?:popen|system)\s*\(|\bsubprocess\.\w+\s*\(|\bshell\s*=\s*true\b"),
     ),
+    (
+        "python_network_exfil",
+        re.compile(r"\bimport\s+requests\b|\brequests?\.(?:get|post|put|delete|patch)\s*\("),
+    ),
 )
 
 

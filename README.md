@@ -2,12 +2,7 @@
 
 A pluggable, hexagonal-architecture LLM red-team harness that runs security-style attack campaigns against LLM apps, grades the responses, stores findings, and reports them.
 
-> **Status:** scaffold. Interfaces, domain models, plugin registry, wiring,
-> and reference (dummy/mock) implementations are in place and tested. The
-> Garak-backed `AttackGenerator` is a real integration (requires the
-> `garak` extra) — see `ARCHITECTURE.md` § 8.1a. Other real integrations
-> (OpenAI, Anthropic, HTTP, local models, LangGraph agents, an LLM-judge
-> evaluator) are intentionally left as `NotImplementedError` stubs — see
+
 > `ARCHITECTURE.md` → _Future extension points_.
 
 ## Why this exists

@@ -95,13 +95,14 @@ llm-redteam/
 │       ├── plugins/               # Registry + PolicyRegistry
 │       ├── config/                # composition root (YAML → wired runner)
 │       └── cli/                   # thin argparse entrypoint
-└── tests/                         # mirrors package layout
-    ├── domain/
-    ├── application/
-    ├── adapters/
-    ├── plugins/
-    ├── config/
-    └── conftest.py
+└── test/
+    └── llm_redteam/                # mirrors package layout
+        ├── domain/
+        ├── application/
+        ├── adapters/
+        ├── plugins/
+        ├── config/
+        └── conftest.py
 ```
 
 ---
@@ -757,16 +758,16 @@ custom_fuzzer = "my_pkg.generator:CustomFuzzingGenerator"
 
 ## 11. Testing strategy
 
-Path: `tests/` (mirrors source packages)
+Path: `test/llm_redteam/` (mirrors source packages)
 
-| Area                  | What is covered                                           |
-| --------------------- | --------------------------------------------------------- |
-| `tests/domain/`       | Model immutability, helpers, invariants                   |
-| `tests/domain/ports/` | ABC contracts (cannot instantiate incomplete subclasses)  |
-| `tests/application/`  | Orchestrator + all three engines                          |
-| `tests/adapters/`     | Functional adapters + policy rule positive/negative cases |
-| `tests/plugins/`      | `Registry` + `PolicyRegistry`                             |
-| `tests/config/`       | YAML load + DI wiring                                     |
+| Area                              | What is covered                                           |
+| ---------------------------------- | --------------------------------------------------------- |
+| `test/llm_redteam/domain/`       | Model immutability, helpers, invariants                   |
+| `test/llm_redteam/domain/ports/` | ABC contracts (cannot instantiate incomplete subclasses)  |
+| `test/llm_redteam/application/`  | Orchestrator + all three engines                          |
+| `test/llm_redteam/adapters/`     | Functional adapters + policy rule positive/negative cases |
+| `test/llm_redteam/plugins/`      | `Registry` + `PolicyRegistry`                             |
+| `test/llm_redteam/config/`       | YAML load + DI wiring                                     |
 | `conftest.py`         | Imports `adapters` once so plugins are registered         |
 
 Tooling:

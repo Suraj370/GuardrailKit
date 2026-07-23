@@ -12,11 +12,11 @@ test:
 	$(VENV_PYTHON) -m pytest
 
 lint:
-	$(VENV_PYTHON) -m ruff check src tests examples
+	$(VENV_PYTHON) -m ruff check src test/llm_redteam examples
 
 format:
-	$(VENV_PYTHON) -m ruff format src tests examples
-	$(VENV_PYTHON) -m ruff check --fix src tests examples
+	$(VENV_PYTHON) -m ruff format src test/llm_redteam examples
+	$(VENV_PYTHON) -m ruff check --fix src test/llm_redteam examples
 
 typecheck:
 	$(VENV_PYTHON) -m mypy

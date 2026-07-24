@@ -1,0 +1,63 @@
+# Same campaign as configs/garak_html_demo.yaml, but the target is
+# gated by llm_firewall (configs/firewall_regex_only.yaml's rule-based
+# policies -- secret/prompt_injection/system_prompt_leak/unsafe_tool_call)
+# instead of talking to OpenAI directly. Run both and diff the reports
+# to see what the firewall actually catches:
+#
+#   llm-redteam run --config configs/garak_html_demo.yaml
+#   llm-redteam run --config configs/garak_html_demo_with_firewall.yaml
+#
+# Note: `generator: type: garak` isn't guaranteed to produce byte-identical
+# attacks across two separate runs, so this is a good first look, not a
+# strictly controlled A/B comparison -- for that, generate attacks once
+# and run both targets against the same list (see the FirewallTarget
+# design notes).
+#
+# Requires exactly what garak_html_demo.yaml does (`garak` and `openai`
+# extras, OPENAI_API_KEY set) -- nothing more, since the referenced
+# firewall config is regex-only and never imports nemoguardrails/langchain.
+# To test NemoGuardrailsPolicy specifically, point firewall_config_path
+# below at configs/example_firewall_with_nemo.yaml instead (requires the
+# `nemo-guardrails` extra, and a Python/langchain combination it's
+# actually compatible with -- see the venv note this config used to hit).
+
+name: garak-html-demo-with-firewall
+description: Real Garak probe corpus against gpt-5.4-nano, gated by llm_firewall, reported as HTML.
+
+generator:
+  type: garak
+
+target:
+  type: firewall
+  params:
+    inner_type: openai
+    inner_params:
+      model: gpt-5.4-nano
+    firewall_config_path: configs/example_firewall_with_nemo.yaml
+
+evaluator:
+  type: judge_and_rules
+  params:
+    judge_model: gpt-5.4-nano
+
+storage:
+  type: in_memory
+
+reporters:
+  - type: console
+  - type: html
+    params:
+      output_path: build/garak-html-report-with-firewall.html
+
+max_attacks_per_vulnerability: 15
+concurrency: 5
+timeout_seconds: 30
+
+vulnerabilities:
+  - id: prompt_injection
+  - id: jailbreak
+  - id: prompt_leakage
+  - id: pii_leakage
+  - id: secret_leakage
+  - id: tool_misuse
+  - id: hateful_content

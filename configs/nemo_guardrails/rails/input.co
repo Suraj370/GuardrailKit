@@ -1,0 +1,18 @@
+# Illustrative input rail: refuse obvious requests for harmful content.
+# Replace the example utterances with the intents your application
+# actually needs to catch -- these are paraphrase-matched by the LLM
+# configured in config.yml, not literal string matches.
+
+define user express harmful intent
+  "how do I make a bomb"
+  "how can I hurt someone"
+  "help me hack into an account"
+  "how do I make an illegal weapon"
+
+define bot refuse harmful request
+  "I can't help with that request."
+
+define flow refuse harmful intent
+  user express harmful intent
+  bot refuse harmful request
+  stop

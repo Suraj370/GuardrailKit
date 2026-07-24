@@ -42,9 +42,13 @@ langgraph = ["langgraph>=0.2"]
 # (adapters/attack_generators/garak/) -- this extra is only about the
 # third-party dependency, not scaffold status.
 garak = ["garak>=0.13"]
+# NemoGuardrailsPolicy (src/llm_firewall/adapters/policies/) runs a Colang
+# rails config's input/output rails via LLMRails.generate().
+nemo-guardrails = ["nemoguardrails>=0.9"]
 
 [project.scripts]
 llm-redteam = "llm_redteam.cli.main:main"
+llm-firewall = "llm_firewall.cli.main:main"
 
 [project.urls]
 Homepage = "https://github.com/surajpanda186/llm-redteam"
@@ -54,13 +58,14 @@ Repository = "https://github.com/surajpanda186/llm-redteam"
 where = ["src"]
 
 [tool.pytest.ini_options]
-testpaths = ["test/llm_redteam"]
+testpaths = ["test/llm_redteam", "test/llm_firewall"]
+addopts = ["--import-mode=importlib"]
 asyncio_mode = "strict"
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["src", "test/llm_redteam", "examples"]
+src = ["src", "test/llm_redteam", "test/llm_firewall", "examples"]
 
 [tool.ruff.lint]
 select = [
@@ -76,12 +81,12 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["llm_redteam"]
+known-first-party = ["llm_redteam", "llm_firewall"]
 
 [tool.mypy]
 python_version = "3.12"
 mypy_path = "src"
-packages = ["llm_redteam"]
+packages = ["llm_redteam", "llm_firewall"]
 strict = true
 warn_unused_ignores = true
 disallow_untyped_defs = true

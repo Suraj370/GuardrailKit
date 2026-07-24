@@ -1,0 +1,1 @@
+"""Thin argparse CLI entrypoint."""

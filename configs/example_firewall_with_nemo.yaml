@@ -1,0 +1,19 @@
+# Example firewall config that opts into NemoGuardrailsPolicy.
+#
+# `nemo_guardrails.config_path` tells the loader to construct and
+# register the policy under the name "nemo_guardrails" before
+# `policies:` below is resolved -- see
+# src/llm_firewall/adapters/policies/nemo_guardrails_policy.py.
+#
+# Requires the `nemo-guardrails` extra: pip install 'llm-redteam[nemo-guardrails]'
+
+nemo_guardrails:
+  config_path: configs/nemo_guardrails
+
+policies:
+  - secret
+  - prompt_injection
+  - nemo_guardrails
+
+block_severity: high
+flag_severity: low

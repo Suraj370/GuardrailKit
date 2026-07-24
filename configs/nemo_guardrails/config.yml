@@ -1,0 +1,30 @@
+# Minimal NeMo Guardrails configuration -- a starting point for
+# llm_firewall's NemoGuardrailsPolicy scaffold, not a finished ruleset.
+#
+# The two flows below (rails/input.co, rails/output.co) are illustrative:
+# replace them with whatever your application actually needs to catch.
+# Colang's canonical-form matching (`user express ...` / `bot ...`) uses
+# the configured LLM below to paraphrase-match user/bot turns against
+# these examples, so it requires a real, working LLM backend -- this
+# is not a pattern-matching rule engine like llm_firewall's own
+# regex-based policies (secret/prompt_injection). PII detection is
+# intentionally not duplicated as a regex policy here either -- NeMo
+# Guardrails' built-in Sensitive Data Detection rail (Presidio-backed)
+# covers PII more broadly; see the `sensitive_data_detection` config
+# block to enable it.
+#
+# Defaults to OpenAI here; set OPENAI_API_KEY, or change engine/model
+# to point at whatever provider you use elsewhere in this project.
+# See https://docs.nvidia.com/nemo/guardrails/ for the full reference.
+models:
+  - type: main
+    engine: openai
+    model: gpt-4o-mini
+
+rails:
+  input:
+    flows:
+      - refuse harmful intent
+  output:
+    flows:
+      - refuse secret leakage

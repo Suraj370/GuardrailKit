@@ -15,7 +15,7 @@ from llm_redteam.config import (
 from llm_redteam.domain.errors import ConfigurationError
 from llm_redteam.domain.vulnerabilities import VULNERABILITY_REGISTRY
 
-_EXAMPLE_CONFIG_PATH = Path(__file__).resolve().parents[2] / "configs" / "example_campaign.yaml"
+_EXAMPLE_CONFIG_PATH = Path(__file__).resolve().parents[3] / "configs" / "example_campaign.yaml"
 
 
 def test_load_campaign_config_parses_example_file() -> None:

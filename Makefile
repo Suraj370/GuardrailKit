@@ -27,7 +27,7 @@ run-example:
 	$(VENV_PYTHON) examples/run_example_campaign.py
 
 run-example-cli:
-	$(VENV_PYTHON) -m llm_redteam_firewall.cli.main run --config configs/example_campaign.yaml
+	$(VENV_PYTHON) -m llm_redteam.cli.main run --config configs/example_campaign.yaml
 
 clean:
 	find . -type d -name "__pycache__" -prune -exec rm -rf {} \;

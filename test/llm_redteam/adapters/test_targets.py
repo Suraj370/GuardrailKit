@@ -11,7 +11,7 @@ import pytest
 
 from llm_firewall import Firewall
 from llm_redteam.adapters.targets.callback_target import CallbackTarget
-from llm_redteam.adapters.targets.firewall_target import FirewallTarget
+from llm_redteam.adapters.targets.firewall_target import REFUSAL_MESSAGE, FirewallTarget
 from llm_redteam.adapters.targets.mock_target import MockTarget
 from llm_redteam.adapters.targets.openai_target import OpenAINotInstalledError, OpenAITarget
 from llm_redteam.domain.models import Attack, ExecutionContext
@@ -283,7 +283,7 @@ async def test_firewall_target_blocks_before_reaching_inner_target() -> None:
     result = await target.execute(ctx, attack)
 
     assert calls == []  # inner target was never invoked
-    assert result.output == ""
+    assert result.output == REFUSAL_MESSAGE
     assert result.succeeded is True  # a block is a successful defensive outcome, not an error
     assert result.raw["firewall_decision"] == "block"
     assert result.raw["firewall_stage"] == "input"
@@ -299,7 +299,7 @@ async def test_firewall_target_blocks_after_inner_target_leaks_secret() -> None:
 
     result = await target.execute(ctx, attack)
 
-    assert result.output == ""  # the leak never reaches the transcript
+    assert result.output == REFUSAL_MESSAGE  # the leak never reaches the transcript
     assert result.succeeded is True
     assert result.raw["firewall_decision"] == "block"
     assert result.raw["firewall_stage"] == "output"

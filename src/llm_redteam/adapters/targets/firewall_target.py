@@ -27,6 +27,12 @@ from llm_redteam.domain.models import Attack, AttackResult, ExecutionContext
 from llm_redteam.domain.ports import Target
 from llm_redteam.plugins import TARGETS
 
+REFUSAL_MESSAGE = "I cannot respond to this request."
+"""Returned as ``output`` for a blocked result, instead of leaving it empty --
+an empty string reads as the target silently failing rather than the
+firewall actively refusing, both to the evaluator and to anyone reading
+the campaign transcript."""
+
 
 class FirewallTarget(Target):
     """Runs an attack through a pre-call check, the wrapped Target, then a post-call check.
@@ -60,9 +66,11 @@ class FirewallTarget(Target):
     invoked -- the wrapped model never sees the attack. A blocked
     post-call check withholds ``inner``'s real output from the
     returned :class:`AttackResult` -- the leak never reaches the
-    evaluator or the campaign transcript. Either way the block is
-    reported via ``raw["firewall_decision"] == "block"`` rather than
-    ``error``, since a block is the defense working, not a failure.
+    evaluator or the campaign transcript. Either way ``output`` is
+    replaced with :data:`REFUSAL_MESSAGE` rather than left empty, and
+    the block is reported via ``raw["firewall_decision"] == "block"``
+    rather than ``error``, since a block is the defense working, not
+    a failure.
     """
 
     def __init__(self, inner: Target, firewall: Firewall, *, name: str = "firewall") -> None:
@@ -111,6 +119,7 @@ class FirewallTarget(Target):
         return AttackResult(
             attack_id=attack.id,
             target_name=self.name,
+            output=REFUSAL_MESSAGE,
             latency_ms=(time.perf_counter() - started) * 1000,
             raw={
                 "firewall_decision": "block",

@@ -18,7 +18,9 @@ from llm_redteam.plugins import TARGETS
 class MockTarget(Target):
     """Always returns the same canned response, regardless of input."""
 
-    def __init__(self, canned_response: str = "I cannot help with that request.", name: str = "mock") -> None:
+    def __init__(
+        self, canned_response: str = "I cannot help with that request.", name: str = "mock"
+    ) -> None:
         self._canned_response = canned_response
         self._name = name
 

@@ -10,12 +10,23 @@
 #
 # Swap `target:` to point at a different model, or back to `type: mock`
 # for a zero-dependency, zero-cost pipeline smoke test.
+#
+# `false_positive_check` rides along here too, same as in
+# garak_html_demo_with_firewall.yaml -- but there's no firewall in this
+# config, so "wrongly blocked" means something different: FirewallAwareEvaluator
+# falls back to checking whether the model *itself* refused a genuine,
+# innocent prompt (over-refusal), rather than whether a firewall blocked
+# it (there's no firewall here to do that). Two different questions --
+# "does the model over-refuse" vs. "does the firewall over-block" -- each
+# meaningful in its own config.
 
 name: garak-html-demo
-description: Real Garak probe corpus against gpt-5.4-nano, reported as HTML.
+description: Real Garak probe corpus (plus genuine traffic) against gpt-5.4-nano, reported as HTML.
 
 generator:
-  type: garak
+  type: mixed
+  params:
+    wrapped_type: garak
 
 target:
   type: openai
@@ -23,9 +34,11 @@ target:
     model: gpt-5.4-nano
 
 evaluator:
-  type: judge_and_rules
+  type: firewall_aware
   params:
-    judge_model: gpt-5.4-nano
+    wrapped_type: judge_and_rules
+    wrapped_params:
+      judge_model: gpt-5.4-nano
 
 storage:
   type: in_memory
@@ -48,3 +61,4 @@ vulnerabilities:
   - id: secret_leakage
   - id: tool_misuse
   - id: hateful_content
+  - id: false_positive_check

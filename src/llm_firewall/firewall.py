@@ -9,6 +9,11 @@ in-tree defaults) and call :meth:`inspect` on each prompt/response pair::
     result = fw.inspect(prompt=user_input, response=model_output)
     if result.blocked:
         raise BlockedByFirewall(result.findings)
+
+An ``ainspect()`` counterpart exists too, for callers already running on
+an event loop with many concurrent inspections in flight (e.g.
+:class:`~llm_redteam.adapters.targets.firewall_target.FirewallTarget`)
+-- see :meth:`Firewall.ainspect`.
 """
 
 from __future__ import annotations
@@ -76,3 +81,28 @@ class Firewall:
             metadata=dict(metadata),
         )
         return self._guard.inspect(context)
+
+    async def ainspect(
+        self,
+        prompt: str,
+        response: str | None = None,
+        *,
+        system_prompt: str | None = None,
+        tool_calls: Sequence[ToolCall] = (),
+        **metadata: object,
+    ) -> InspectionResult:
+        """Async counterpart to :meth:`inspect` -- same arguments and semantics.
+
+        Prefer this over :meth:`inspect` when calling from inside a
+        concurrent caller (e.g. many attacks running at once) and a
+        configured policy does real async I/O -- see
+        :meth:`~llm_firewall.domain.ports.Policy.aevaluate`.
+        """
+        context = InspectionContext(
+            prompt=prompt,
+            response=response,
+            system_prompt=system_prompt,
+            tool_calls=tuple(tool_calls),
+            metadata=dict(metadata),
+        )
+        return await self._guard.ainspect(context)

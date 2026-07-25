@@ -168,10 +168,19 @@ class LLMJudgeEvaluator(Evaluator):
 
     name = "llm_judge"
 
-    def __init__(self, judge_model: str = "gpt-5-nano", api_key: str | None = None) -> None:
+    def __init__(
+        self,
+        judge_model: str = "gpt-5-nano",
+        api_key: str | None = None,
+        base_url: str | None = None,
+    ) -> None:
         self._judge_model = judge_model
         async_openai_cls = _import_async_openai_client()
-        self._client = async_openai_cls(api_key=api_key)  # api_key=None reads OPENAI_API_KEY
+        # api_key=None reads OPENAI_API_KEY; base_url=None uses OpenAI's
+        # real endpoint -- pass an OpenAI-compatible endpoint (OpenRouter,
+        # Together, Groq, ...) here to grade through a different provider,
+        # the same way OpenAITarget already supports.
+        self._client = async_openai_cls(api_key=api_key, base_url=base_url)
 
     async def evaluate(
         self,

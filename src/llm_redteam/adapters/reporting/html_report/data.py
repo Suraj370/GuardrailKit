@@ -394,11 +394,11 @@ def prepare_report_data(report: Report) -> PreparedReport:
             )
         )
 
-    vulnerabilities_tested = tuple(
-        sorted({f.vulnerability.name for f in findings}, key=str.lower)
-    )
+    vulnerabilities_tested = tuple(sorted({f.vulnerability.name for f in findings}, key=str.lower))
     attack_generators = tuple(
-        sorted({f.attack.generator_name for f in findings if f.attack.generator_name}, key=str.lower)
+        sorted(
+            {f.attack.generator_name for f in findings if f.attack.generator_name}, key=str.lower
+        )
     )
     targets_tested = tuple(
         sorted(
@@ -425,12 +425,8 @@ def prepare_report_data(report: Report) -> PreparedReport:
         targets_tested=targets_tested,
     )
 
-    findings_by_severity = {
-        level: severity_counter.get(level, 0) for level in _SEVERITY_ORDER
-    }
-    findings_by_vuln: dict[str, int] = Counter(
-        f.vulnerability.name for f in issue_findings
-    )
+    findings_by_severity = {level: severity_counter.get(level, 0) for level in _SEVERITY_ORDER}
+    findings_by_vuln: dict[str, int] = Counter(f.vulnerability.name for f in issue_findings)
     attacks_per_vuln: dict[str, int] = Counter(f.vulnerability.name for f in findings)
 
     charts = ChartData(
@@ -450,10 +446,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
         or ("medium",),
         "statuses": tuple(
             sorted(
-                {
-                    f.status.value if hasattr(f.status, "value") else str(f.status)
-                    for f in findings
-                }
+                {f.status.value if hasattr(f.status, "value") else str(f.status) for f in findings}
             )
         ),
         "result_labels": tuple(sorted({fv.status_label for fv in finding_views})),

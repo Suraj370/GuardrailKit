@@ -31,7 +31,9 @@ async def test_run_evaluates_each_pair(vulnerability: Vulnerability) -> None:
 
 
 @pytest.mark.asyncio
-async def test_run_short_circuits_failed_target_execution_as_passed(vulnerability: Vulnerability) -> None:
+async def test_run_short_circuits_failed_target_execution_as_passed(
+    vulnerability: Vulnerability,
+) -> None:
     engine = EvaluationEngine(evaluator=_AlwaysFailEvaluator(), concurrency=2)
     attacks = [Attack(id="a1", vulnerability_id=vulnerability.id, prompt="p")]
     attack_results = [AttackResult(attack_id="a1", target_name="mock", error="timed out")]

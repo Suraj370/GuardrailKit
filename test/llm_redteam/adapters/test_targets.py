@@ -143,7 +143,9 @@ async def test_callback_target_measures_latency_on_success() -> None:
     target = CallbackTarget(callback=lambda prompt: "ok")
     ctx = ExecutionContext(campaign_name="c1")
 
-    with patch("llm_redteam.adapters.targets.callback_target.time.perf_counter", _fake_perf_counter):
+    with patch(
+        "llm_redteam.adapters.targets.callback_target.time.perf_counter", _fake_perf_counter
+    ):
         result = await target.execute(ctx, _attack())
 
     assert result.latency_ms == pytest.approx(250.0)
@@ -162,7 +164,9 @@ async def test_callback_target_measures_latency_on_error() -> None:
     target = CallbackTarget(callback=_boom)
     ctx = ExecutionContext(campaign_name="c1")
 
-    with patch("llm_redteam.adapters.targets.callback_target.time.perf_counter", _fake_perf_counter):
+    with patch(
+        "llm_redteam.adapters.targets.callback_target.time.perf_counter", _fake_perf_counter
+    ):
         result = await target.execute(ctx, _attack())
 
     assert result.latency_ms == pytest.approx(100.0)

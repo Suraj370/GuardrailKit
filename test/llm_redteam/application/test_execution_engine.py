@@ -15,7 +15,9 @@ class _EchoTarget:
     name = "echo"
 
     async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
-        return AttackResult(attack_id=attack.id, target_name=self.name, output=f"echo: {attack.prompt}")
+        return AttackResult(
+            attack_id=attack.id, target_name=self.name, output=f"echo: {attack.prompt}"
+        )
 
 
 class _FailingTarget:

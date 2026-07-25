@@ -9,6 +9,11 @@ modules — probe discovery, selection, and mapping — not just one
 file), but both register into this same ``GENERATORS`` registry.
 """
 
-from . import dummy_generator, garak  # noqa: F401  (import for registration side effect)
+from . import (  # noqa: F401  (import for registration side effect)
+    dummy_generator,
+    garak,
+    genuine_generator,
+    mixed_generator,
+)
 
-__all__ = ["dummy_generator", "garak"]
+__all__ = ["dummy_generator", "garak", "genuine_generator", "mixed_generator"]

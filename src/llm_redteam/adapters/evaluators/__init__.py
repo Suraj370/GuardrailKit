@@ -7,6 +7,7 @@ Importing this package registers all in-tree evaluators with
 from . import (  # noqa: F401  (import for registration side effect)
     composite_evaluator,
     dummy_evaluator,
+    firewall_aware_evaluator,
     llm_judge_evaluator,
     rule_based_evaluator,
 )
@@ -14,6 +15,7 @@ from . import (  # noqa: F401  (import for registration side effect)
 __all__ = [
     "composite_evaluator",
     "dummy_evaluator",
+    "firewall_aware_evaluator",
     "llm_judge_evaluator",
     "rule_based_evaluator",
 ]

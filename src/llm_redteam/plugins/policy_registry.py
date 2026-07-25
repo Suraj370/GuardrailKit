@@ -67,9 +67,7 @@ class PolicyRegistry:
             return self._policies[name]
         except KeyError as exc:
             available = ", ".join(sorted(self._policies)) or "<none registered>"
-            raise PluginNotFoundError(
-                f"no policy named {name!r}; available: {available}"
-            ) from exc
+            raise PluginNotFoundError(f"no policy named {name!r}; available: {available}") from exc
 
     def all(self) -> list[Policy]:
         """Return all registered policies in stable name order."""

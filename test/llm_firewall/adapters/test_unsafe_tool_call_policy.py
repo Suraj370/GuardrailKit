@@ -26,9 +26,7 @@ def test_flags_shell_injection_in_argument() -> None:
     findings = policy.evaluate(
         InspectionContext(
             prompt="read this file",
-            tool_calls=(
-                ToolCall(name="read_file", arguments={"path": "report.txt; rm -rf /"}),
-            ),
+            tool_calls=(ToolCall(name="read_file", arguments={"path": "report.txt; rm -rf /"}),),
         )
     )
 

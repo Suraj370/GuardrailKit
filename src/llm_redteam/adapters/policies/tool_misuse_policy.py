@@ -15,19 +15,18 @@ _MISUSE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ),
     (
         "sensitive_path_access",
-        re.compile(
-            r"(?i)(/etc/passwd|/etc/shadow|\.ssh/id_rsa|\\windows\\system32)"
-        ),
+        re.compile(r"(?i)(/etc/passwd|/etc/shadow|\.ssh/id_rsa|\\windows\\system32)"),
     ),
     (
         "shell_tool_call",
-        re.compile(
-            r'(?i)"(?:name|tool|function)"\s*:\s*"(?:shell|bash|sh|powershell|cmd|exec)"'
-        ),
+        re.compile(r'(?i)"(?:name|tool|function)"\s*:\s*"(?:shell|bash|sh|powershell|cmd|exec)"'),
     ),
     (
         "sql_destructive",
-        re.compile(r"(?i)\b(drop\s+table|drop\s+database|truncate\s+table|delete\s+from\s+\w+\s*;?\s*$)", re.MULTILINE),
+        re.compile(
+            r"(?i)\b(drop\s+table|drop\s+database|truncate\s+table|delete\s+from\s+\w+\s*;?\s*$)",
+            re.MULTILINE,
+        ),
     ),
     (
         "privilege_escalation",

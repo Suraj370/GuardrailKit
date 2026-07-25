@@ -104,7 +104,11 @@ def to_vulnerability(
     if metadata:
         resolved_metadata.update(metadata)
 
-    category = definition.default_attack_categories[0] if definition.default_attack_categories else definition.id
+    category = (
+        definition.default_attack_categories[0]
+        if definition.default_attack_categories
+        else definition.id
+    )
 
     return Vulnerability(
         id=id if id is not None else definition.id,

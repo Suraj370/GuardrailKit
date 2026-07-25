@@ -20,7 +20,9 @@ class HTTPTarget(Target):
 
     name = "http"
 
-    def __init__(self, url: str, prompt_field: str = "prompt", response_field: str = "response") -> None:
+    def __init__(
+        self, url: str, prompt_field: str = "prompt", response_field: str = "response"
+    ) -> None:
         self._url = url
         self._prompt_field = prompt_field
         self._response_field = response_field

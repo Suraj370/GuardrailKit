@@ -6,18 +6,23 @@ raw model alone: a blocked attack never reaches the wrapped Target at
 all, and a response the firewall would have withheld never reaches the
 evaluator either.
 
-``Firewall.inspect()`` is synchronous and, once NeMo Guardrails is
-configured, can block on a real network call -- so it's run via
-``asyncio.to_thread`` here rather than called directly, to avoid
-stalling the event loop (and every other attack sharing it) for the
-duration of that call. See
-:class:`~llm_redteam.application.execution_engine.ExecutionEngine`,
-which runs many attacks concurrently via ``asyncio.gather``.
+Uses ``Firewall.ainspect()`` (not the sync ``inspect()``), which awaits
+each configured policy natively on this coroutine's own event loop
+instead of via a thread-pool detour. That distinction matters under
+real concurrency: :class:`~llm_redteam.application.execution_engine.ExecutionEngine`
+runs many attacks at once via ``asyncio.gather``, and an earlier version
+of this class called the sync ``inspect()`` through ``asyncio.to_thread``
+-- which happened to reuse OS threads across unrelated attacks, and a
+thread that had previously run an LLM-backed policy (NeMo Guardrails)
+could hand a stale, already-shut-down event loop to the next attack
+that landed on it, crashing with ``RuntimeError: cannot schedule new
+futures after shutdown``. See
+:mod:`~llm_firewall.adapters.policies.nemo_guardrails_policy` for the
+full story and the fix on the policy side.
 """
 
 from __future__ import annotations
 
-import asyncio
 import time
 from collections.abc import Sequence
 
@@ -85,7 +90,7 @@ class FirewallTarget(Target):
     async def execute(self, ctx: ExecutionContext, attack: Attack) -> AttackResult:
         started = time.perf_counter()
 
-        pre = await asyncio.to_thread(self._firewall.inspect, prompt=attack.prompt)
+        pre = await self._firewall.ainspect(prompt=attack.prompt)
         if pre.blocked:
             return self._blocked_result(attack, started, stage="input", findings=pre.findings)
 
@@ -94,9 +99,7 @@ class FirewallTarget(Target):
             # Nothing to firewall-check -- the inner target itself failed.
             return result
 
-        post = await asyncio.to_thread(
-            self._firewall.inspect, prompt=attack.prompt, response=result.output
-        )
+        post = await self._firewall.ainspect(prompt=attack.prompt, response=result.output)
         if post.blocked:
             return self._blocked_result(attack, started, stage="output", findings=post.findings)
 

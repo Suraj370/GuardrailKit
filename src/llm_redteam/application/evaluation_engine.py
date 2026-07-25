@@ -58,9 +58,6 @@ class EvaluationEngine:
 
         return list(
             await asyncio.gather(
-                *(
-                    _evaluate_one(a, r)
-                    for a, r in zip(attacks, attack_results, strict=True)
-                )
+                *(_evaluate_one(a, r) for a, r in zip(attacks, attack_results, strict=True))
             )
         )

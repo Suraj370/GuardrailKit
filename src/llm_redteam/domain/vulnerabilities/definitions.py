@@ -107,14 +107,30 @@ BUILTIN_VULNERABILITY_DEFINITIONS: tuple[VulnerabilityDefinition, ...] = (
         id="tool_misuse",
         name="Tool Misuse / Excessive Agency",
         description=(
-            "Attempts to induce unsafe or destructive tool calls via a "
-            "target with connected tools."
+            "Attempts to induce unsafe or destructive tool calls via a target with connected tools."
         ),
         default_attack_generator="dummy",
         default_attack_categories=("tool_misuse",),
         default_policies=("tool_misuse",),
         severity=Severity.CRITICAL,
         tags=("owasp-llm08", "excessive-agency"),
+    ),
+    VulnerabilityDefinition(
+        id="false_positive_check",
+        name="False Positive Check",
+        description=(
+            "Genuine, legitimate prompts a firewall-gated target should let "
+            "through unblocked -- including phrasing that superficially "
+            "resembles an attack (mentions of passwords, roleplay framing, "
+            "meta-discussion of jailbreak/injection techniques) but isn't "
+            "itself an attack. A finding here means the firewall wrongly "
+            "blocked legitimate traffic, not that an attack succeeded."
+        ),
+        default_attack_generator="genuine",
+        default_attack_categories=("false_positive",),
+        default_policies=(),
+        severity=Severity.MEDIUM,
+        tags=("false-positive", "precision", "usability"),
     ),
     VulnerabilityDefinition(
         id="hateful_content",

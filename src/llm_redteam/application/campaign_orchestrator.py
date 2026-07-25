@@ -57,7 +57,9 @@ class CampaignOrchestrator:
                 vulnerability, campaign.max_attacks_per_vulnerability
             )
             if not generated_attacks:
-                logger.warning("generator produced no attacks for vulnerability=%s", vulnerability.id)
+                logger.warning(
+                    "generator produced no attacks for vulnerability=%s", vulnerability.id
+                )
                 continue
 
             # Wrap the generator's flat output in an AttackCampaign so the

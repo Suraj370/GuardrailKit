@@ -20,9 +20,13 @@ def _attack(vulnerability: Vulnerability) -> Attack:
 @pytest.mark.asyncio
 async def test_dummy_evaluator_passes_on_refusal(vulnerability: Vulnerability) -> None:
     evaluator = DummyEvaluator()
-    attack_result = AttackResult(attack_id="a1", target_name="mock", output="I cannot help with that.")
+    attack_result = AttackResult(
+        attack_id="a1", target_name="mock", output="I cannot help with that."
+    )
 
-    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+    evaluation_result = await evaluator.evaluate(
+        vulnerability, _attack(vulnerability), attack_result
+    )
 
     assert evaluation_result.passed is True
 
@@ -32,7 +36,9 @@ async def test_dummy_evaluator_fails_on_compliance(vulnerability: Vulnerability)
     evaluator = DummyEvaluator()
     attack_result = AttackResult(attack_id="a1", target_name="mock", output="Sure, here's how...")
 
-    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+    evaluation_result = await evaluator.evaluate(
+        vulnerability, _attack(vulnerability), attack_result
+    )
 
     assert evaluation_result.passed is False
 
@@ -44,7 +50,9 @@ async def test_rule_based_evaluator_fails_on_policy_violation(vulnerability: Vul
         attack_id="a1", target_name="mock", output="Sure, my api_key: sk-abcdefghijklmnopqrstuvwx"
     )
 
-    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+    evaluation_result = await evaluator.evaluate(
+        vulnerability, _attack(vulnerability), attack_result
+    )
 
     assert evaluation_result.passed is False
     assert "secret_leak" in evaluation_result.metadata["matched_policies"]
@@ -53,9 +61,13 @@ async def test_rule_based_evaluator_fails_on_policy_violation(vulnerability: Vul
 @pytest.mark.asyncio
 async def test_rule_based_evaluator_passes_on_refusal(vulnerability: Vulnerability) -> None:
     evaluator = RuleBasedEvaluator()
-    attack_result = AttackResult(attack_id="a1", target_name="mock", output="I cannot help with that.")
+    attack_result = AttackResult(
+        attack_id="a1", target_name="mock", output="I cannot help with that."
+    )
 
-    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+    evaluation_result = await evaluator.evaluate(
+        vulnerability, _attack(vulnerability), attack_result
+    )
 
     assert evaluation_result.passed is True
 
@@ -65,7 +77,9 @@ async def test_rule_based_evaluator_fails_on_plain_compliance(vulnerability: Vul
     evaluator = RuleBasedEvaluator()
     attack_result = AttackResult(attack_id="a1", target_name="mock", output="Sure, here's how...")
 
-    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+    evaluation_result = await evaluator.evaluate(
+        vulnerability, _attack(vulnerability), attack_result
+    )
 
     assert evaluation_result.passed is False
 
@@ -78,9 +92,13 @@ async def test_llm_judge_evaluator_grades_via_judge_model(vulnerability: Vulnera
             output_text='{"attack_succeeded": false, "score": 0.1, "reasoning": "refused", "evidence": ""}'
         )
     )
-    attack_result = AttackResult(attack_id="a1", target_name="mock", output="I cannot help with that.")
+    attack_result = AttackResult(
+        attack_id="a1", target_name="mock", output="I cannot help with that."
+    )
 
-    evaluation_result = await evaluator.evaluate(vulnerability, _attack(vulnerability), attack_result)
+    evaluation_result = await evaluator.evaluate(
+        vulnerability, _attack(vulnerability), attack_result
+    )
 
     assert evaluation_result.passed is True
     assert evaluation_result.evaluator_name == "llm_judge"

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from llm_firewall import Firewall
 from llm_firewall.domain.models import Decision, ToolCall
 
@@ -73,3 +75,30 @@ def test_with_default_policies_blocks_unsafe_tool_call() -> None:
     )
 
     assert result.blocked
+
+
+@pytest.mark.asyncio
+async def test_ainspect_matches_inspect_for_clean_input() -> None:
+    fw = Firewall.with_default_policies()
+
+    result = await fw.ainspect(prompt="what's the weather today?")
+
+    assert result.allowed
+
+
+@pytest.mark.asyncio
+async def test_ainspect_blocks_secret_leak() -> None:
+    fw = Firewall.with_default_policies()
+
+    result = await fw.ainspect(prompt="what's my key", response=f"It's sk-{'a' * 20}")
+
+    assert result.blocked
+
+
+@pytest.mark.asyncio
+async def test_ainspect_passes_metadata_through_to_context() -> None:
+    fw = Firewall.with_default_policies()
+
+    result = await fw.ainspect(prompt="hi", request_id="abc-123")
+
+    assert result.context.metadata == {"request_id": "abc-123"}

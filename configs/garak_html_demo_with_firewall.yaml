@@ -1,8 +1,8 @@
 # Same campaign as configs/garak_html_demo.yaml, but the target is
-# gated by llm_firewall (configs/firewall_regex_only.yaml's rule-based
-# policies -- secret/prompt_injection/system_prompt_leak/unsafe_tool_call)
-# instead of talking to OpenAI directly. Run both and diff the reports
-# to see what the firewall actually catches:
+# gated by llm_firewall (configs/example_firewall_with_nemo.yaml's
+# policies, including NemoGuardrailsPolicy) instead of talking to OpenAI
+# directly. Run both and diff the reports to see what the firewall
+# actually catches:
 #
 #   llm-redteam run --config configs/garak_html_demo.yaml
 #   llm-redteam run --config configs/garak_html_demo_with_firewall.yaml
@@ -11,21 +11,36 @@
 # attacks across two separate runs, so this is a good first look, not a
 # strictly controlled A/B comparison -- for that, generate attacks once
 # and run both targets against the same list (see the FirewallTarget
-# design notes).
+# design notes, or examples/evaluate_firewall_precision.py).
 #
-# Requires exactly what garak_html_demo.yaml does (`garak` and `openai`
-# extras, OPENAI_API_KEY set) -- nothing more, since the referenced
-# firewall config is regex-only and never imports nemoguardrails/langchain.
-# To test NemoGuardrailsPolicy specifically, point firewall_config_path
-# below at configs/example_firewall_with_nemo.yaml instead (requires the
-# `nemo-guardrails` extra, and a Python/langchain combination it's
-# actually compatible with -- see the venv note this config used to hit).
+# `false_positive_check` rides along in the same campaign as every real
+# vulnerability -- it sends genuine, legitimate prompts (some deliberately
+# worded to *look* suspicious) and expects the firewall to let them
+# through. Two wrappers make this coexist with real attacks in one
+# report, since CampaignOrchestrator only supports one generator and one
+# evaluator per campaign:
+#   - `mixed` (generator) routes false_positive_check to GenuinePromptGenerator
+#     and everything else to the wrapped `garak` generator.
+#   - `firewall_aware` (evaluator) grades false_positive_check by whether
+#     the firewall blocked it (inverted semantics -- a block there is the
+#     finding), and for everything else, short-circuits to "resisted"
+#     whenever the firewall already blocked the attack, only calling the
+#     wrapped judge_and_rules evaluator on traffic that actually reached
+#     the target.
+#
+# Requires everything garak_html_demo.yaml does (`garak` and `openai`
+# extras, OPENAI_API_KEY set) plus the `nemo-guardrails` extra, since the
+# referenced firewall config enables NemoGuardrailsPolicy. Point
+# firewall_config_path at configs/firewall_regex_only.yaml (recreate it
+# first) for a regex-only, nemo-free run instead.
 
 name: garak-html-demo-with-firewall
-description: Real Garak probe corpus against gpt-5.4-nano, gated by llm_firewall, reported as HTML.
+description: Real Garak probe corpus (plus genuine traffic) against gpt-5.4-nano, gated by llm_firewall, reported as HTML.
 
 generator:
-  type: garak
+  type: mixed
+  params:
+    wrapped_type: garak
 
 target:
   type: firewall
@@ -36,9 +51,11 @@ target:
     firewall_config_path: configs/example_firewall_with_nemo.yaml
 
 evaluator:
-  type: judge_and_rules
+  type: firewall_aware
   params:
-    judge_model: gpt-5.4-nano
+    wrapped_type: judge_and_rules
+    wrapped_params:
+      judge_model: gpt-5.4-nano
 
 storage:
   type: in_memory
@@ -61,3 +78,4 @@ vulnerabilities:
   - id: secret_leakage
   - id: tool_misuse
   - id: hateful_content
+  - id: false_positive_check

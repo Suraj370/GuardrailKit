@@ -8,6 +8,7 @@ contract — no I/O, no mutation of the context.
 
 from __future__ import annotations
 
+import asyncio
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -53,6 +54,24 @@ class Policy(ABC):
         policy.
         """
         raise NotImplementedError
+
+    async def aevaluate(self, context: InspectionContext) -> list[Finding]:
+        """Async counterpart to :meth:`evaluate`.
+
+        Default implementation runs the sync :meth:`evaluate` in a
+        thread, which is fine for pure-computation policies (every
+        regex-based one in this package) -- there's no shared I/O
+        client for concurrent calls to collide over. Policies that do
+        real async I/O of their own (e.g.
+        :class:`~llm_firewall.adapters.policies.nemo_guardrails_policy.NemoGuardrailsPolicy`
+        calling an LLM) should override this directly instead, so a
+        concurrent caller (:class:`~llm_redteam.adapters.targets.firewall_target.FirewallTarget`)
+        can await it natively rather than bouncing through a thread
+        pool and a nested sync-wrapped event loop -- the latter is what
+        actually caused ``RuntimeError: cannot schedule new futures
+        after shutdown`` under concurrent campaign runs.
+        """
+        return await asyncio.to_thread(self.evaluate, context)
 
     def _finding(
         self,

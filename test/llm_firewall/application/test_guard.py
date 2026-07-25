@@ -169,6 +169,39 @@ def test_expensive_policy_skipped_once_a_cheap_policy_already_blocks() -> None:
     assert expensive.call_count == 0
 
 
+@pytest.mark.asyncio
+async def test_ainspect_aggregates_findings_from_all_policies() -> None:
+    guard = FirewallGuard(
+        [_FlagPolicy("one"), _FlagPolicy("two"), _FlagPolicy("skip", flag=False)],
+        block_severity=Severity.CRITICAL,
+    )
+
+    result = await guard.ainspect(InspectionContext(prompt="probe"))
+
+    assert {f.policy for f in result.findings} == {"one", "two"}
+
+
+@pytest.mark.asyncio
+async def test_ainspect_skips_remaining_policies_once_block_is_locked_in() -> None:
+    critical = _CountingPolicy("critical", severity=Severity.CRITICAL)
+    never_called = _CountingPolicy("never", severity=Severity.LOW)
+    guard = FirewallGuard([critical, never_called])
+
+    result = await guard.ainspect(InspectionContext(prompt="probe"))
+
+    assert result.decision == Decision.BLOCK
+    assert critical.call_count == 1
+    assert never_called.call_count == 0
+
+
+@pytest.mark.asyncio
+async def test_ainspect_wraps_policy_exceptions() -> None:
+    guard = FirewallGuard([_BrokenPolicy()])
+
+    with pytest.raises(PolicyExecutionError, match="broken"):
+        await guard.ainspect(InspectionContext(prompt="probe"))
+
+
 def test_guard_with_builtin_policies_detects_secret_leak() -> None:
     guard = FirewallGuard(POLICIES.all())
 

@@ -42,7 +42,9 @@ class _FakeTarget:
 class _FakeEvaluator:
     name = "fake"
 
-    async def evaluate(self, vulnerability, attack: Attack, attack_result: AttackResult) -> EvaluationResult:
+    async def evaluate(
+        self, vulnerability, attack: Attack, attack_result: AttackResult
+    ) -> EvaluationResult:
         return EvaluationResult(attack_id=attack.id, passed=False, evaluator_name=self.name)
 
 
@@ -80,7 +82,9 @@ async def test_orchestrator_runs_full_pipeline_and_reports(vulnerability: Vulner
         storage=storage,
         reporters=[reporter],
     )
-    campaign = Campaign(name="c1", vulnerabilities=(vulnerability,), max_attacks_per_vulnerability=2)
+    campaign = Campaign(
+        name="c1", vulnerabilities=(vulnerability,), max_attacks_per_vulnerability=2
+    )
 
     report = await orchestrator.run(campaign)
 

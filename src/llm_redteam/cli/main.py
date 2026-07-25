@@ -22,9 +22,7 @@ def _build_parser() -> argparse.ArgumentParser:
         prog="llm-redteam-firewall",
         description="Run LLM red-team campaigns from a YAML config file.",
     )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="enable debug logging"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="enable debug logging")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     run_parser = subparsers.add_parser("run", help="run a campaign")

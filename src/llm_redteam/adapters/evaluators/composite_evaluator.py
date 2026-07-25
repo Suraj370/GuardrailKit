@@ -88,9 +88,16 @@ class CompositeJudgeEvaluator(Evaluator):
 
     name = "judge_and_rules"
 
-    def __init__(self, judge_model: str = "gpt-5-nano", api_key: str | None = None) -> None:
+    def __init__(
+        self,
+        judge_model: str = "gpt-5-nano",
+        api_key: str | None = None,
+        base_url: str | None = None,
+    ) -> None:
         self._rule_evaluator = RuleBasedEvaluator()
-        self._judge_evaluator = LLMJudgeEvaluator(judge_model=judge_model, api_key=api_key)
+        self._judge_evaluator = LLMJudgeEvaluator(
+            judge_model=judge_model, api_key=api_key, base_url=base_url
+        )
 
     async def evaluate(
         self,

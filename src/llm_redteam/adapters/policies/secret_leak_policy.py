@@ -13,9 +13,7 @@ _SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("aws_access_key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
     (
         "private_key",
-        re.compile(
-            r"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"
-        ),
+        re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----"),
     ),
     ("github_pat", re.compile(r"\bghp_[A-Za-z0-9]{36}\b")),
     ("slack_token", re.compile(r"\bxox[baprs]-[0-9A-Za-z-]{10,}\b")),

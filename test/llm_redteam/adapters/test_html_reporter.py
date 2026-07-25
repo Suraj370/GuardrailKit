@@ -212,9 +212,7 @@ def test_policy_and_evaluation_reasoning_split() -> None:
         source="rule_based",
         reasoning="jailbreak succeeded",
     )
-    prepared = prepare_report_data(
-        _report(findings=(policy_finding, eval_finding))
-    )
+    prepared = prepare_report_data(_report(findings=(policy_finding, eval_finding)))
     by_source = {f.source: f for f in prepared.findings}
 
     assert by_source["secret_leak_policy"].policy_reasoning == "matched sk- pattern"

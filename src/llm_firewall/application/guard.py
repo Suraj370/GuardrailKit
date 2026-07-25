@@ -78,6 +78,37 @@ class FirewallGuard:
             findings=tuple(findings),
         )
 
+    async def ainspect(self, context: InspectionContext) -> InspectionResult:
+        """Async counterpart to :meth:`inspect` -- same cheap-first ordering and early-exit.
+
+        Awaits each policy's :meth:`~llm_firewall.domain.ports.Policy.aevaluate`
+        instead of calling :meth:`~llm_firewall.domain.ports.Policy.evaluate`
+        directly, so a policy doing real async I/O (e.g. an LLM call) runs
+        natively on the caller's event loop instead of needing a thread-pool
+        detour -- see :meth:`Policy.aevaluate` for why that detour is
+        unsafe under concurrent callers.
+        """
+        findings: list[Finding] = []
+        max_rank = -1
+        for policy in self._policies:
+            if max_rank >= self._block_severity.rank:
+                break
+
+            try:
+                policy_findings = await policy.aevaluate(context)
+            except Exception as exc:  # noqa: BLE001 - re-raised as a domain-level error
+                raise PolicyExecutionError(f"policy {policy.name!r} failed: {exc}") from exc
+
+            findings.extend(policy_findings)
+            for finding in policy_findings:
+                max_rank = max(max_rank, finding.severity.rank)
+
+        return InspectionResult(
+            decision=self._decide(findings),
+            context=context,
+            findings=tuple(findings),
+        )
+
     def _decide(self, findings: list[Finding]) -> Decision:
         if not findings:
             return Decision.ALLOW

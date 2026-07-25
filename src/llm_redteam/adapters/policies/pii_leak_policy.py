@@ -13,9 +13,7 @@ _PII_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("ssn", re.compile(r"\b\d{3}-\d{2}-\d{4}\b")),
     (
         "phone",
-        re.compile(
-            r"\b(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b"
-        ),
+        re.compile(r"\b(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b"),
     ),
     (
         "credit_card",

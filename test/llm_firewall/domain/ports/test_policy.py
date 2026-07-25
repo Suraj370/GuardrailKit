@@ -59,6 +59,21 @@ def test_expensive_defaults_to_false() -> None:
     assert _Complete().expensive is False
 
 
+@pytest.mark.asyncio
+async def test_aevaluate_default_wraps_sync_evaluate() -> None:
+    class _AlwaysFlag(Policy):
+        name = "always_flag"
+        severity = Severity.CRITICAL
+
+        def evaluate(self, context: InspectionContext) -> list[Finding]:
+            return [self._finding(message="flagged")]
+
+    findings = await _AlwaysFlag().aevaluate(InspectionContext(prompt="p"))
+
+    assert len(findings) == 1
+    assert findings[0].message == "flagged"
+
+
 def test_finding_helper_builds_finding_with_defaults() -> None:
     class _AlwaysFlag(Policy):
         name = "always_flag"

@@ -34,7 +34,7 @@
 # firewall_config_path at configs/firewall_regex_only.yaml (recreate it
 # first) for a regex-only, nemo-free run instead.
 
-name: garak-html-demo-with-firewall
+name: LLM RedTeaming (firewall)
 description: Real Garak probe corpus (plus genuine traffic) against gpt-5.4-nano, gated by llm_firewall, reported as HTML.
 
 generator:

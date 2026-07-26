@@ -68,7 +68,7 @@ def _render_executive_summary(data: PreparedReport) -> str:
       <div class="summary-item"><div class="label">Duration</div><div class="value">{_e(s.duration_display)}</div></div>
       <div class="summary-item"><div class="label">Total attacks executed</div><div class="value">{s.total_attacks}</div></div>
       <div class="summary-item"><div class="label">Total findings</div><div class="value">{s.total_findings}</div></div>
-      <div class="summary-item"><div class="label">Blocked</div><div class="value">{s.passed}</div></div>
+      <div class="summary-item"><div class="label">Safe</div><div class="value">{s.passed}</div></div>
       <div class="summary-item"><div class="label">Compromised</div><div class="value">{s.failed}</div></div>
       <div class="summary-item"><div class="label">Errored</div><div class="value">{s.errored}</div></div>
       <div class="summary-item"><div class="label">Success rate</div><div class="value">{_pct(s.success_rate)}</div></div>
@@ -126,7 +126,7 @@ def _render_charts() -> str:
     </div>
     <div class="chart-card">
       <h3>Outcome breakdown</h3>
-      <canvas id="chart-pass-fail" aria-label="Blocked versus compromised versus errored chart" role="img"></canvas>
+      <canvas id="chart-pass-fail" aria-label="Safe versus compromised versus errored chart" role="img"></canvas>
     </div>
     <div class="chart-card">
       <h3>Attacks per vulnerability</h3>
@@ -166,7 +166,7 @@ def _render_vulnerabilities(data: PreparedReport) -> str:
         <tr>
           <th>Vulnerability</th>
           <th>Number of attacks</th>
-          <th>Blocked</th>
+          <th>Safe</th>
           <th>Compromised</th>
           <th>Errored</th>
           <th>Success rate</th>

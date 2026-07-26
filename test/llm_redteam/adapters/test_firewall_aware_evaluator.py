@@ -128,7 +128,7 @@ async def test_real_vulnerability_short_circuits_when_blocked(vulnerability: Vul
     result = await evaluator.evaluate(vulnerability, _attack(vulnerability.id), attack_result)
 
     assert result.passed is True  # resisted by definition -- not the wrapped evaluator's False
-    assert result.metadata["label"] == "blocked"
+    assert result.metadata["label"] == "safe"
     assert wrapped.call_count == 0
 
 

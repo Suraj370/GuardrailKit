@@ -108,20 +108,21 @@ def _is_errored(finding: Finding) -> bool:
 
 
 def _result_label(finding: Finding) -> str:
-    """The label shown for a finding's outcome: Errored, a judge/rule label, or Blocked/Compromised.
+    """The label shown for a finding's outcome: Errored, a judge/rule label, or Safe/Compromised.
 
     Prefers ``metadata["label"]`` (set by :class:`.CompositeJudgeEvaluator`
-    as ``"blocked"``/``"leaked"``/``"unsafe"``) over the plain boolean
+    as ``"safe"``/``"leaked"``/``"unsafe"``) over the plain boolean
     ``passed``, so evaluators with finer-grained verdicts show them; any
     evaluator that doesn't set a label falls back to the original
-    two-state Blocked/Compromised split.
+    two-state Safe/Compromised split. "Safe" covers both a correctly
+    blocked attack and a response the evaluator found to be no threat.
     """
     if _is_errored(finding):
         return "Errored"
     label = finding.metadata.get("label")
     if isinstance(label, str) and label:
         return label.capitalize()
-    return "Blocked" if finding.passed else "Compromised"
+    return "Safe" if finding.passed else "Compromised"
 
 
 def _safe_jsonable(value: Any) -> Any:
@@ -265,7 +266,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
     # Errored findings (execution never produced a gradable response —
     # see EvaluationEngine) are excluded from pass/fail/success-rate math
     # so unrelated infra failures (timeouts, rate limits) can't inflate
-    # the Blocked count with attacks that were never actually graded.
+    # the Safe count with attacks that were never actually graded.
     graded_findings = tuple(f for f in findings if not _is_errored(f))
     errored = len(findings) - len(graded_findings)
     passed = sum(1 for f in graded_findings if f.passed)
@@ -432,7 +433,7 @@ def prepare_report_data(report: Report) -> PreparedReport:
     charts = ChartData(
         findings_by_severity=findings_by_severity,
         findings_by_vulnerability=dict(sorted(findings_by_vuln.items())),
-        pass_vs_fail={"blocked": passed, "compromised": failed, "errored": errored},
+        pass_vs_fail={"safe": passed, "compromised": failed, "errored": errored},
         attacks_per_vulnerability=dict(sorted(attacks_per_vuln.items())),
     )
 

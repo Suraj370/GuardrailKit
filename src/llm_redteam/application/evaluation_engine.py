@@ -46,7 +46,7 @@ class EvaluationEngine:
                     # tagged "errored" in metadata rather than folded into
                     # a security verdict, so reporting can surface it
                     # distinctly and exclude it from success-rate math
-                    # instead of silently inflating "Blocked".
+                    # instead of silently inflating "Safe".
                     return EvaluationResult(
                         attack_id=attack.id,
                         passed=True,

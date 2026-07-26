@@ -43,7 +43,7 @@ async def test_run_short_circuits_failed_target_execution_as_passed(
     # A target that could not be reached is not evidence of a vulnerability.
     assert evaluation_result.passed is True
     # ...but it's tagged distinctly so reporting can exclude it from
-    # success-rate math instead of silently inflating "Blocked".
+    # success-rate math instead of silently inflating "Safe".
     assert evaluation_result.metadata["outcome"] == "errored"
     assert evaluation_result.metadata["error"] == "timed out"
 

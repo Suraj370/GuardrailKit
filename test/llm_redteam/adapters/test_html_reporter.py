@@ -176,7 +176,7 @@ def test_charts_receive_expected_data() -> None:
     assert charts.findings_by_severity["critical"] == 1
     assert charts.findings_by_severity["medium"] == 1
     assert charts.findings_by_severity["high"] == 0
-    assert charts.pass_vs_fail == {"blocked": 1, "compromised": 2, "errored": 0}
+    assert charts.pass_vs_fail == {"safe": 1, "compromised": 2, "errored": 0}
     assert charts.findings_by_vulnerability["Prompt Injection"] == 1
     assert charts.findings_by_vulnerability["PII Leakage"] == 1
     assert charts.attacks_per_vulnerability["Prompt Injection"] == 2

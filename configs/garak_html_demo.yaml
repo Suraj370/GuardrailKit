@@ -20,7 +20,7 @@
 # "does the model over-refuse" vs. "does the firewall over-block" -- each
 # meaningful in its own config.
 
-name: garak-html-demo
+name: LLM RedTeaming (no firewall)
 description: Real Garak probe corpus (plus genuine traffic) against gpt-5.4-nano, reported as HTML.
 
 generator:

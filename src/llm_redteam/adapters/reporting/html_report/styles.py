@@ -391,7 +391,7 @@ table.data-table tbody tr:hover { background: var(--bg-muted); }
 .badge-medium { color: var(--sev-medium); background: var(--sev-medium-bg); }
 .badge-low { color: var(--sev-low); background: var(--sev-low-bg); }
 .badge-informational { color: var(--sev-info); background: var(--sev-info-bg); }
-.badge-blocked { color: var(--pass); background: var(--pass-bg); }
+.badge-safe { color: var(--pass); background: var(--pass-bg); }
 .badge-compromised { color: var(--fail); background: var(--fail-bg); }
 .badge-leaked { color: var(--fail); background: var(--fail-bg); }
 .badge-unsafe { color: var(--sev-high); background: var(--sev-high-bg); }

@@ -122,7 +122,7 @@ llm-redteam run --config configs/garak_html_demo.yaml   # real garak corpus, rea
 ### Config example
 
 ```yaml
-name: garak-html-demo
+name: LLM RedTeaming (no firewall)
 generator:
   type: garak
 target:

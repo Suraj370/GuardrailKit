@@ -32,7 +32,7 @@ from llm_redteam.domain.models import Attack, AttackResult, ExecutionContext
 from llm_redteam.domain.ports import Target
 from llm_redteam.plugins import TARGETS
 
-REFUSAL_MESSAGE = "I cannot respond to this request."
+REFUSAL_MESSAGE = "Sorry, we can't help you with this request."
 """Returned as ``output`` for a blocked result, instead of leaving it empty --
 an empty string reads as the target silently failing rather than the
 firewall actively refusing, both to the evaluator and to anyone reading

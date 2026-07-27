@@ -11,6 +11,8 @@ import json
 import logging
 import sys
 
+from dotenv import load_dotenv
+
 from llm_firewall import adapters  # noqa: F401 - registers in-tree policies
 from llm_firewall.config import load_guard
 from llm_firewall.domain.errors import ConfigurationError, PluginNotFoundError
@@ -95,6 +97,7 @@ def _run_policies() -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    load_dotenv()  # populates os.environ from a .env file, if present, before any policy wiring
     parser = _build_parser()
     args = parser.parse_args(argv)
 

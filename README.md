@@ -42,6 +42,18 @@ treats policies as swappable plugins too, orders cheap ones ahead of
 expensive ones, and short-circuits once a decision is already locked
 in.
 
+## ScreenShots
+
+Before:
+
+<img width="1917" height="982" alt="Screenshot 2026-07-30 122214" src="https://github.com/user-attachments/assets/545e1fbc-4aa0-4a84-b219-f9c46b25428c" />
+<img width="1917" height="977" alt="Screenshot 2026-07-30 122117" src="https://github.com/user-attachments/assets/93c8e692-719e-46f1-b31e-162fd19433e4" />
+
+After:
+<img width="1917" height="982" alt="Screenshot 2026-07-30 122402" src="https://github.com/user-attachments/assets/abf47ee3-e397-4ecb-97ed-844844956b3d" />
+<img width="1917" height="977" alt="Screenshot 2026-07-30 122336" src="https://github.com/user-attachments/assets/96b19a7c-6c57-4f78-8046-dc58a93f511f" />
+
+
 ## Quickstart
 
 ```bash
